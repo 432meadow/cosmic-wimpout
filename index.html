@@ -60,11 +60,18 @@
 
   <!-- ?v= must be bumped together with CACHE in sw.js on every ship, otherwise
        a cache-first service worker pins the old code on installed devices. -->
-  <script src="src/art.js?v=2"></script>
-  <script src="src/engine.js?v=2"></script>
-  <script src="src/ai.js?v=2"></script>
-  <script src="src/render.js?v=2"></script>
-  <script src="src/game.js?v=2"></script>
+  <!-- order matters: ui and scenes must exist before any scene registers,
+       and game.js boots last -->
+  <script src="src/art.js?v=3"></script>
+  <script src="src/engine.js?v=3"></script>
+  <script src="src/ai.js?v=3"></script>
+  <script src="src/ui.js?v=3"></script>
+  <script src="src/scenes.js?v=3"></script>
+  <script src="src/render.js?v=3"></script>
+  <script src="src/scene-play.js?v=3"></script>
+  <script src="src/scene-menu.js?v=3"></script>
+  <script src="src/scene-rules.js?v=3"></script>
+  <script src="src/game.js?v=3"></script>
   <script>
     // Service worker only works over http(s); file:// still runs fine without it.
     if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {

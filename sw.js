@@ -1,16 +1,21 @@
 /* Cosmic Wimpout — offline shell.
    Cache-first: the game is entirely static and must run with no network once
    installed to the home screen. Bump CACHE to ship an update. */
-const CACHE = 'wimpout-v2';
+const CACHE = 'wimpout-v3';
 const SHELL = [
   './',
   './index.html',
   './manifest.webmanifest',
-  './src/art.js?v=2',
-  './src/engine.js?v=2',
-  './src/ai.js?v=2',
-  './src/render.js?v=2',
-  './src/game.js?v=2',
+  './src/art.js?v=3',
+  './src/engine.js?v=3',
+  './src/ai.js?v=3',
+  './src/ui.js?v=3',
+  './src/scenes.js?v=3',
+  './src/render.js?v=3',
+  './src/scene-play.js?v=3',
+  './src/scene-menu.js?v=3',
+  './src/scene-rules.js?v=3',
+  './src/game.js?v=3',
   './icons/icon-180.png',
   './icons/icon-192.png',
   './icons/icon-512.png',

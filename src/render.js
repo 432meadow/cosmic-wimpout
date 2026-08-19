@@ -43,7 +43,7 @@
     ]);
   }
 
-  const buttons = [];
+  const btns = new CW.ui.Buttons();
   const dieRects = {};
 
   function slotFor(dieId) {
@@ -156,39 +156,31 @@
     }
   }
 
-  function addButton(label, x, w, action, enabled) {
-    buttons.push({ label, x: Math.round(x), y: BTN_Y, w, h: BTN_H,
-                   action, enabled: !!enabled });
-  }
-
   function layoutButtons(s) {
-    buttons.length = 0;
+    btns.clear();
     const R = CW.rules, W = 88, GAP = 12;
+
+    /* Quiet, always-available way out. The match stays alive when we leave, so
+       the menu can offer RESUME and this is never destructive. */
+    btns.add('MENU', 8, BTN_Y, 52, 'menu', { quiet: true, scale: 1 });
+
     if (s.phase === 'GAME_OVER') {
-      addButton('NEW GAME', L.cx - W / 2, W, 'new', true);
+      btns.add('NEW GAME', L.cx - W / 2, BTN_Y, W, 'new');
       return;
     }
     if (s.current !== 0) return;                      // the Oracle plays itself
     if (s.phase === 'READY') {
       if (R.canBank(s)) {
-        addButton('ROLL', L.cx - W - GAP / 2, W, 'roll', true);
-        addButton('BANK ' + s.turn.points, L.cx + GAP / 2, W, 'bank', true);
+        btns.add('ROLL', L.cx - W - GAP / 2, BTN_Y, W, 'roll');
+        btns.add('BANK ' + s.turn.points, L.cx + GAP / 2, BTN_Y, W, 'bank');
       } else {
-        addButton('ROLL', L.cx - W / 2, W, 'roll', true);
+        btns.add('ROLL', L.cx - W / 2, BTN_Y, W, 'roll');
       }
     } else if (s.phase === 'SELECT') {
-      addButton('TAKE', L.cx - W / 2, W, 'confirm', R.canConfirm(s));
+      btns.add('TAKE', L.cx - W / 2, BTN_Y, W, 'confirm',
+               { enabled: R.canConfirm(s) });
     } else if (s.phase === 'TURN_OVER') {
-      addButton('CONTINUE', L.cx - W / 2, W, 'next', true);
-    }
-  }
-
-  function drawButtons(scr) {
-    for (const b of buttons) {
-      const lit = b.enabled;
-      scr.roundRect(b.x, b.y, b.w, b.h, [4, 2, 1], lit ? 1 : 0);
-      scr.roundFrame(b.x, b.y, b.w, b.h, [4, 2, 1], lit ? 3 : 1);
-      scr.textCenter(b.label, b.x + b.w / 2, b.y + (b.h - 10) / 2, lit ? 3 : 1, 2);
+      btns.add('CONTINUE', L.cx - W / 2, BTN_Y, W, 'next');
     }
   }
 
@@ -235,9 +227,13 @@
     drawStatus(scr, s);
     drawMessage(scr, s, t);
     layoutButtons(s);
-    drawButtons(scr);
+    btns.draw(scr);
     if (s.phase === 'GAME_OVER') drawGameOver(scr, s);
   }
 
-  CW.render = { draw, buttons, dieRects, slotFor, layout, L, CY };
+  CW.render = {
+    draw, dieRects, slotFor, layout, L, CY,
+    buttons: btns.list,
+    buttonAt: (x, y) => btns.hit(x, y),
+  };
 })(window);
