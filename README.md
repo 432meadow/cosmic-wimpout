@@ -8,7 +8,13 @@ a single HTML file and installs to an iPhone home screen.
 
 ## Play
 
-Open `index.html`. That's it — the scripts are plain `<script>` tags rather than
+**[432meadow.github.io/cosmic-wimpout](https://432meadow.github.io/cosmic-wimpout/)**
+
+On iPhone, open that in Safari and use **Share -> Add to Home Screen**. It
+installs as a landscape app and runs offline afterwards. Rotate the phone: iOS
+ignores the manifest's orientation hint.
+
+Or run it locally -- open `index.html`. That's it — the scripts are plain `<script>` tags rather than
 ES modules specifically so `file://` works.
 
 To install it on a phone you need it served over http, then use **Share → Add to
