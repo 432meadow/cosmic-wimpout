@@ -146,6 +146,10 @@
     for (const k in dieRects) delete dieRects[k];
     const R = CW.rules, t = s.turn;
     const a = t.analysis;
+    /* The engine resolves a throw the instant it is rolled, so everything below
+       is already true while the cubes are still tumbling. Holding it back until
+       they land is the whole point of the animation. */
+    const rolling = !!view.busy;
 
     for (const id of R.DICE) {
       const inHand = t.hand.indexOf(id) !== -1;
@@ -161,6 +165,8 @@
       const opts = { sunCube: id === 's' };
       if (aside && !inHand) {
         opts.dim = true;
+      } else if (rolling) {
+        // plain while in the air: no flash border, no held ring
       } else if (s.phase === 'SELECT' && a) {
         if (a.flashDice.indexOf(id) !== -1 || a.special) opts.locked = true;
         else if (t.kept[id]) opts.held = true;
@@ -176,13 +182,16 @@
     }
   }
 
-  function layoutButtons(s) {
+  function layoutButtons(s, rolling) {
     btns.clear();
     const R = CW.rules, W = 88, GAP = 12;
 
     /* Quiet, always-available way out. The match stays alive when we leave, so
        the menu can offer RESUME and this is never destructive. */
     btns.add('MENU', 8, BTN_Y, 52, 'menu', { quiet: true, scale: 1 });
+
+    // CONTINUE appearing mid-throw announces a wimpout before the cubes land
+    if (rolling) return;
 
     if (s.phase === 'GAME_OVER') {
       btns.add('NEW GAME', L.cx - W / 2, BTN_Y, W, 'new');
@@ -220,7 +229,13 @@
     }
   }
 
-  function drawMessage(scr, s, t) {
+  function drawMessage(scr, s, view, t) {
+    if (view && view.busy) {
+      // a quiet tell that something is happening, without saying what
+      const dots = 1 + (Math.floor(t / 160) % 3);
+      scr.textCenter('.'.repeat(dots), L.cx, MSG_Y, 1);
+      return;
+    }
     const urgent = s.event === 'wimpout' || s.event === 'supernova';
     const c = urgent ? (Math.sin(t * 0.02) > 0 ? 3 : 2) : 3;
     scr.textCenter(s.message || '', L.cx, MSG_Y, c);
@@ -253,8 +268,8 @@
     drawDice(scr, s, view);
     drawHud(scr, s);
     drawStatus(scr, s);
-    drawMessage(scr, s, t);
-    layoutButtons(s);
+    drawMessage(scr, s, view, t);
+    layoutButtons(s, !!view.busy);
     btns.draw(scr);
     if (s.phase === 'GAME_OVER') drawGameOver(scr, s);
   }
