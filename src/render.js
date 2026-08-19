@@ -18,11 +18,13 @@
   const CY = 98;                       // board centre
   const BTN_Y = 182, BTN_H = 26;
   const MSG_Y = 168;
-  const RY0 = 34, RY1 = 66;            // spiral vertical radii
+  // pulled in from 66 to leave a clear line at y=30 for the goal caption, now
+  // that the player chips occupy the whole top strip
+  const RY0 = 32, RY1 = 62;            // spiral vertical radii
 
   // Cube slots: (fraction of half-width, absolute y) offset from board centre.
   const SLOT_OFF = [
-    [-0.344, -32], [0, -46], [0.344, -32], [-0.271, 36], [0.271, 36],
+    [-0.344, -30], [0, -42], [0.344, -30], [-0.271, 34], [0.271, 34],
   ];
 
   const L = {
@@ -43,7 +45,7 @@
     ]);
   }
 
-  const buttons = [];
+  const btns = new CW.ui.Buttons();
   const dieRects = {};
 
   function slotFor(dieId) {
@@ -72,44 +74,62 @@
     }
   }
 
+  // Distinct silhouettes, not just colours: at this size four players need to be
+  // told apart by shape when two markers land on the same stretch of track.
+  const MARKERS = [
+    function diamond(scr, x, y, c) {
+      for (let d = -3; d <= 3; d++) {
+        const w = 3 - Math.abs(d);
+        scr.rect(x - w, y + d, w * 2 + 1, 1, c);
+      }
+    },
+    function ring(scr, x, y, c) {
+      scr.rect(x - 3, y - 3, 7, 7, c);
+      scr.rect(x - 1, y - 1, 3, 3, 0);
+    },
+    function triangle(scr, x, y, c) {
+      for (let d = 0; d < 4; d++) scr.rect(x - d, y + d - 2, d * 2 + 1, 1, c);
+    },
+    function cross(scr, x, y, c) {
+      scr.rect(x - 3, y - 1, 7, 3, c);
+      scr.rect(x - 1, y - 3, 3, 7, c);
+    },
+  ];
+
   function drawMarkers(scr, s) {
     s.players.forEach((pl, i) => {
       if (pl.out) return;
       const p = trackPos(scr, pl.banked, s.goal);
       const x = Math.round(p[0]), y = Math.round(p[1]);
       scr.disc(x, y, 4, 0);                       // halo, so it reads over art
-      if (i === 0) {
-        for (let d = -3; d <= 3; d++) {
-          const w = 3 - Math.abs(d);
-          scr.rect(x - w, y + d, w * 2 + 1, 1, 3);
-        }
-      } else {
-        scr.rect(x - 3, y - 3, 7, 7, 2);
-        scr.rect(x - 1, y - 1, 3, 3, 0);
-      }
+      (MARKERS[i] || MARKERS[3])(scr, x, y, i === 0 ? 3 : 2);
     });
   }
 
+  /* One chip per seat, spread across the top strip. This scales to two players
+     or four without a special case, and the lit chip says whose turn it is,
+     which frees the line the old "YOUR TURN" caption used. */
   function drawHud(scr, s) {
-    const you = s.players[0], him = s.players[1];
-    const right = scr.w - 8;
+    const n = s.players.length;
+    const colW = scr.w / n;
 
-    scr.text('YOU', 8, 4, 2);
-    scr.text(you.banked, 8, 11, 3, 2);
-    if (you.out) scr.text('OUT', 8, 24, 2);
-    else if (!you.onBoard) scr.text('OFF BOARD', 8, 24, 1);
+    s.players.forEach((p, i) => {
+      const cx = colW * (i + 0.5);
+      const turn = s.current === i && s.phase !== 'GAME_OVER';
+      if (turn) scr.roundRect(cx - colW / 2 + 3, 0, colW - 6, 28, [3, 1], 1);
+      scr.textCenter(p.name, cx, 3, turn ? 3 : 2);
+      scr.textCenter(String(p.banked), cx, 11, p.out ? 1 : 3, 2);
+      const tag = p.out ? 'OUT' : (p.onBoard ? '' : 'OFF BOARD');
+      if (tag) scr.textCenter(tag, cx, 23, p.out ? 2 : 1);
+    });
 
-    const nm = 'ORACLE';
-    scr.text(nm, right - scr.textWidth(nm), 4, 2);
-    const sc = String(him.banked);
-    scr.text(sc, right - scr.textWidth(sc, 2), 11, 3, 2);
-    const tag = him.out ? 'OUT' : (him.onBoard ? '' : 'OFF BOARD');
-    if (tag) scr.text(tag, right - scr.textWidth(tag), 24, him.out ? 2 : 1);
-
-    const goal = s.lastLicks ? 'LAST LICKS ' + s.lastLicks.target : 'GOAL ' + s.goal;
-    scr.textCenter(goal, L.cx, 5, 2);
-    if (s.phase !== 'GAME_OVER') {
-      scr.textCenter(s.current === 0 ? 'YOUR TURN' : 'ORACLE ROLLS', L.cx, 14, 1);
+    /* Four chips already crowd the top strip, so this line is reserved for
+       whatever is currently governing the game: Last Licks outranks a Guiding
+       Light, since it is the more urgent of the two. */
+    if (s.lastLicks) {
+      scr.textCenter('LAST LICKS ' + s.lastLicks.target, L.cx, 30, 2);
+    } else if (s.light) {
+      scr.textCenter('* ' + s.light.name + ' *', L.cx, 30, 2);
     }
   }
 
@@ -156,48 +176,43 @@
     }
   }
 
-  function addButton(label, x, w, action, enabled) {
-    buttons.push({ label, x: Math.round(x), y: BTN_Y, w, h: BTN_H,
-                   action, enabled: !!enabled });
-  }
-
   function layoutButtons(s) {
-    buttons.length = 0;
+    btns.clear();
     const R = CW.rules, W = 88, GAP = 12;
+
+    /* Quiet, always-available way out. The match stays alive when we leave, so
+       the menu can offer RESUME and this is never destructive. */
+    btns.add('MENU', 8, BTN_Y, 52, 'menu', { quiet: true, scale: 1 });
+
     if (s.phase === 'GAME_OVER') {
-      addButton('NEW GAME', L.cx - W / 2, W, 'new', true);
+      btns.add('NEW GAME', L.cx - W / 2, BTN_Y, W, 'new');
       return;
     }
-    if (s.current !== 0) return;                      // the Oracle plays itself
+    if (!s.players[s.current].human) return;          // opponents play themselves
     if (s.phase === 'READY') {
       if (R.canBank(s)) {
-        addButton('ROLL', L.cx - W - GAP / 2, W, 'roll', true);
-        addButton('BANK ' + s.turn.points, L.cx + GAP / 2, W, 'bank', true);
+        btns.add('ROLL', L.cx - W - GAP / 2, BTN_Y, W, 'roll');
+        btns.add('BANK ' + s.turn.points, L.cx + GAP / 2, BTN_Y, W, 'bank');
       } else {
-        addButton('ROLL', L.cx - W / 2, W, 'roll', true);
+        btns.add('ROLL', L.cx - W / 2, BTN_Y, W, 'roll');
       }
     } else if (s.phase === 'SELECT') {
-      addButton('TAKE', L.cx - W / 2, W, 'confirm', R.canConfirm(s));
+      btns.add('TAKE', L.cx - W / 2, BTN_Y, W, 'confirm',
+               { enabled: R.canConfirm(s) });
     } else if (s.phase === 'TURN_OVER') {
-      addButton('CONTINUE', L.cx - W / 2, W, 'next', true);
-    }
-  }
-
-  function drawButtons(scr) {
-    for (const b of buttons) {
-      const lit = b.enabled;
-      scr.roundRect(b.x, b.y, b.w, b.h, [4, 2, 1], lit ? 1 : 0);
-      scr.roundFrame(b.x, b.y, b.w, b.h, [4, 2, 1], lit ? 3 : 1);
-      scr.textCenter(b.label, b.x + b.w / 2, b.y + (b.h - 10) / 2, lit ? 3 : 1, 2);
+      btns.add('CONTINUE', L.cx - W / 2, BTN_Y, W, 'next');
     }
   }
 
   function drawStatus(scr, s) {
     const t = s.turn;
+    // one slot, in priority order: what blocks you, then what you are aiming at
     if (t.forbidden.length) {
       scr.text('CLEAR: NO ' + t.forbidden.join('/'), 8, MSG_Y, 2);
     } else if (!CW.rules.player(s).onBoard) {
       scr.text('NEED 35', 8, MSG_Y, 1);
+    } else if (!s.lastLicks) {
+      scr.text('GOAL ' + s.goal, 8, MSG_Y, 1);
     }
     if (s.phase !== 'GAME_OVER') {
       const n = 'CUBES ' + t.hand.length;
@@ -212,15 +227,20 @@
   }
 
   function drawGameOver(scr, s) {
-    const w = Math.min(240, scr.w - 40), h = 56;
+    const w = Math.min(280, scr.w - 40), h = 62;
     const x = L.cx - w / 2, y = CY - h / 2;
     scr.roundRect(x, y, w, h, [4, 2, 1, 1], 0);
     scr.roundFrame(x, y, w, h, [4, 2, 1, 1], 3);
     const won = s.winner === 0;
-    scr.textCenter(won ? 'YOU WIN' : 'THE ORACLE WINS', L.cx, y + 12, 3, 2);
-    scr.textCenter(s.players[0].banked + ' - ' + s.players[1].banked, L.cx, y + 32, 2);
+    const name = s.winner != null ? s.players[s.winner].name : '';
+    scr.textCenter(won ? 'YOU WIN' : name + ' WINS', L.cx, y + 10, 3, 2);
+    // final standings, highest first
+    const line = s.players.map((p, i) => ({ p, i }))
+      .sort((a, b) => b.p.banked - a.p.banked)
+      .map(o => o.p.name + ' ' + o.p.banked).join('   ');
+    scr.textCenter(line, L.cx, y + 30, 2);
     scr.textCenter(won ? 'THE COSMOS SMILES' : 'SOMETIMES YOU WIMP OUT',
-                   L.cx, y + 42, 1);
+                   L.cx, y + 44, 1);
   }
 
   function draw(scr, s, view, t) {
@@ -235,9 +255,13 @@
     drawStatus(scr, s);
     drawMessage(scr, s, t);
     layoutButtons(s);
-    drawButtons(scr);
+    btns.draw(scr);
     if (s.phase === 'GAME_OVER') drawGameOver(scr, s);
   }
 
-  CW.render = { draw, buttons, dieRects, slotFor, layout, L, CY };
+  CW.render = {
+    draw, dieRects, slotFor, layout, L, CY,
+    buttons: btns.list,
+    buttonAt: (x, y) => btns.hit(x, y),
+  };
 })(window);

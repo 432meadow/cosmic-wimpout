@@ -1,8 +1,8 @@
 # Cosmic Wimpout
 
 A pixel-art implementation of the 1976 push-your-luck dice game, played against
-the Oracle. No build step, no dependencies, no network — it runs from a single
-HTML file and installs to an iPhone home screen.
+up to three opponents. No build step, no dependencies, no network — it runs from
+a single HTML file and installs to an iPhone home screen.
 
 ![The board: five cubes on a spiral score track around a flaming Sun-Star](docs/screenshot.png)
 
@@ -24,6 +24,62 @@ Touch: tap a cube to keep it, tap the buttons to roll, take and bank.
 
 Keyboard: `SPACE` roll / take · `B` bank · `1`–`5` pick a cube · `P` palette ·
 `M` mute.
+
+## Opponents
+
+Pick one to three. They differ in temperament rather than skill, and the numbers
+below are measured over 40,000 turns each, not guessed:
+
+| | Habit | Bust rate | Points per turn |
+| --- | --- | --- | --- |
+| **ORACLE** | Plays the odds straight | 34% | 26.8 |
+| **HERMIT** | Banks early and often | 24% | 24.4 |
+| **COMET** | Chases everything | 51% | 25.8 |
+
+Near-identical yield, very different shape. There is a ceiling on how far any of
+them can diverge, and it belongs to the game rather than the code: 68% of all
+throws are *forced* by the rules, and 65% of all busts happen on one.
+
+## The Guiding Light
+
+The printed rules end with an invitation: *any new rule may be added at any time
+provided all players agree.* Switch it on before a game and one extra rule is
+drawn at random and announced at the start.
+
+| Rule | Effect |
+| --- | --- |
+| **COSMIC SAMPLER** | Five different faces score 25 |
+| **FULL HOUSE** | A flash with a pair alongside scores double |
+| **HALF MOONS RISE** | Half moons score 5 each |
+| **THE SUN RIDES** | The Sun may complete a Freight Train |
+| **THE SUN BETRAYS** | The Sun matches your flash face while clearing |
+| **CLEAN SWEEP** | Matching a flash face re-throws the whole batch |
+| **STEEP ASCENT** | You need 70 to get on the board |
+| **MERCY** | Your first wimpout each game is forgiven |
+
+Five of these are not inventions: they are the printed rules' genuine
+ambiguities (see [RULES.md](RULES.md) §5) read the other way, which is why they
+feel like the game rather than bolted onto it. Every variant lives as data in
+`BASE_MODS`, so the engine stays one code path instead of growing a branch per
+rule. Play to 300, 500 or 1000.
+
+The opponents adapt: rather than assume the printed odds, they **measure the
+rules actually in play** at the start of each game. Under HALF MOONS RISE the
+true five-cube bust rate is 0.8% against the printed game's 5.8%, and an
+opponent working from the wrong number plays as if in danger while nearly safe.
+
+## It remembers
+
+The match is written to `localStorage` as you play and picked back up on a cold
+start, because a phone will interrupt you and losing a game 200 points into a
+race is the difference between a page and an app. Lifetime records — best turn,
+biggest flash, Freight Trains, Supernovas survived — live under RECORDS.
+
+## Learning it
+
+Hints explain each rule at the moment the game first applies it — no scripted
+tutorial and no rigged dice. Each fires once ever and is remembered between
+sessions. Toggle or reset them from the main menu.
 
 ## The game in one minute
 
@@ -52,10 +108,18 @@ and each is isolated in the engine so it can be flipped.
 | Path | Role |
 | --- | --- |
 | `src/engine.js` | Rules. Pure state machine, no rendering, no DOM. |
-| `src/ai.js` | The Oracle. Risk table measured against the engine, not guessed. |
+| `src/ai.js` | Opponents. Calibrates its risk table to whatever rules are in play. |
 | `src/art.js` | Palette, 3×5 font, die faces, Sun-Star corona, audio. |
 | `src/render.js` | Board drawing. Reads state, writes pixels, owns no logic. |
-| `src/game.js` | Shell: canvas, loop, input, opponent pacing. |
+| `src/ui.js` | Shared button widget and text wrapper. |
+| `src/scenes.js` | Scene registry. |
+| `src/scene-*.js` | Menu, opponent setup, rules, and the match itself. |
+| `src/hints.js` | Contextual rule hints and what has been seen. |
+| `src/save.js` | Match persistence across app close. |
+| `src/stats.js` | Lifetime records. |
+| `src/fanfare.js` | Full-screen moments for trains, wins and Supernovas. |
+| `src/audio.js` | Ambient drone and star sparkles under the menus. |
+| `src/game.js` | Shell: canvas, scaling, loop, input routing. |
 | `sim/` | Monte Carlo analysis and its PDF report. |
 | `tools/icon.html` | Generates the app icons from the in-game Sun-Star. |
 
@@ -96,7 +160,13 @@ Integer-only scaling was the original approach and had to go: `floor(393/384)` i
 
 **Bump `?v=N` in `index.html` and `CACHE` in `sw.js` together on every ship.**
 The service worker is cache-first, so without it an installed phone will keep
-running old code indefinitely. This has already bitten once.
+running old code indefinitely. Worse during development: the browser serves the
+stale file and a working change looks broken. Use the script rather than doing
+it by hand — that mistake has cost three debugging detours already:
+
+```bash
+tools/bump.sh
+```
 
 ## Credits
 
