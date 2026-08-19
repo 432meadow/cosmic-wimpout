@@ -27,7 +27,10 @@
     go(name, opts) {
       const next = map[name];
       if (!next) throw new Error('unknown scene: ' + name);
-      if (S.active === next) return;
+      /* Re-entering the same scene is a no-op ONLY when nothing was asked for.
+         Passing opts means "reconfigure", e.g. go('play', {fresh:true}) to
+         restart a match from within it, which must not be silently swallowed. */
+      if (S.active === next && !opts) return;
       if (S.active && S.active.exit) S.active.exit();
       S.prev = S.name;
       S.name = name;

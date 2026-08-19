@@ -194,6 +194,9 @@
     exit() { stopAI(); },
 
     tick(now) {
+      // Only once the cubes have settled -- a hint about a flash is meaningless
+      // while the faces are still tumbling.
+      if (!view.busy) CW.hints.check(state, state && state.event, now);
       if (!view.busy) return;
       if (now >= view.rollUntil) { finishRoll(); return; }
       if (now < view.nextTick) return;
@@ -207,7 +210,10 @@
       blips().tick();
     },
 
-    draw(scr, t) { CW.render.draw(scr, state, view, t); },
+    draw(scr, t) {
+      CW.render.draw(scr, state, view, t);
+      CW.hints.draw(scr, t);
+    },
 
     press(x, y) {
       const action = CW.render.buttonAt(x, y);

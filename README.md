@@ -1,8 +1,8 @@
 # Cosmic Wimpout
 
 A pixel-art implementation of the 1976 push-your-luck dice game, played against
-the Oracle. No build step, no dependencies, no network — it runs from a single
-HTML file and installs to an iPhone home screen.
+up to three opponents. No build step, no dependencies, no network — it runs from
+a single HTML file and installs to an iPhone home screen.
 
 ![The board: five cubes on a spiral score track around a flaming Sun-Star](docs/screenshot.png)
 
@@ -24,6 +24,27 @@ Touch: tap a cube to keep it, tap the buttons to roll, take and bank.
 
 Keyboard: `SPACE` roll / take · `B` bank · `1`–`5` pick a cube · `P` palette ·
 `M` mute.
+
+## Opponents
+
+Pick one to three. They differ in temperament rather than skill, and the numbers
+below are measured over 40,000 turns each, not guessed:
+
+| | Habit | Bust rate | Points per turn |
+| --- | --- | --- | --- |
+| **ORACLE** | Plays the odds straight | 34% | 26.8 |
+| **HERMIT** | Banks early and often | 24% | 24.4 |
+| **COMET** | Chases everything | 51% | 25.8 |
+
+Near-identical yield, very different shape. There is a ceiling on how far any of
+them can diverge, and it belongs to the game rather than the code: 68% of all
+throws are *forced* by the rules, and 65% of all busts happen on one.
+
+## Learning it
+
+Hints explain each rule at the moment the game first applies it — no scripted
+tutorial and no rigged dice. Each fires once ever and is remembered between
+sessions. Toggle or reset them from the main menu.
 
 ## The game in one minute
 
@@ -52,10 +73,14 @@ and each is isolated in the engine so it can be flipped.
 | Path | Role |
 | --- | --- |
 | `src/engine.js` | Rules. Pure state machine, no rendering, no DOM. |
-| `src/ai.js` | The Oracle. Risk table measured against the engine, not guessed. |
+| `src/ai.js` | Opponents. Risk table measured against the engine, not guessed. |
 | `src/art.js` | Palette, 3×5 font, die faces, Sun-Star corona, audio. |
 | `src/render.js` | Board drawing. Reads state, writes pixels, owns no logic. |
-| `src/game.js` | Shell: canvas, loop, input, opponent pacing. |
+| `src/ui.js` | Shared button widget and text wrapper. |
+| `src/scenes.js` | Scene registry. |
+| `src/scene-*.js` | Menu, opponent setup, rules, and the match itself. |
+| `src/hints.js` | Contextual rule hints and what has been seen. |
+| `src/game.js` | Shell: canvas, scaling, loop, input routing. |
 | `sim/` | Monte Carlo analysis and its PDF report. |
 | `tools/icon.html` | Generates the app icons from the in-game Sun-Star. |
 
@@ -96,7 +121,13 @@ Integer-only scaling was the original approach and had to go: `floor(393/384)` i
 
 **Bump `?v=N` in `index.html` and `CACHE` in `sw.js` together on every ship.**
 The service worker is cache-first, so without it an installed phone will keep
-running old code indefinitely. This has already bitten once.
+running old code indefinitely. Worse during development: the browser serves the
+stale file and a working change looks broken. Use the script rather than doing
+it by hand — that mistake has cost three debugging detours already:
+
+```bash
+tools/bump.sh
+```
 
 ## Credits
 

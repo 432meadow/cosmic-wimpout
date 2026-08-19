@@ -17,7 +17,19 @@
       items.push({ label: 'PLAY', action: 'setup' });
     }
     items.push({ label: 'HOW TO PLAY', action: 'rules' });
-    btns.clear().stack(cx, 112, 132, items, 8);
+
+    // centre the stack rather than pinning its top, so two and three items
+    // both sit clear of the footer
+    const total = items.length * CW.ui.BTN_H + (items.length - 1) * 8;
+    btns.clear().stack(cx, Math.round(142 - total / 2), 132, items, 8);
+
+    const H = CW.hints;
+    btns.add('HINTS ' + (H.enabled ? 'ON' : 'OFF'), 8, 184, 62, 'hints',
+             { quiet: true, scale: 1 });
+    if (H.seenCount() > 0) {
+      btns.add('RESET HINTS', scr.w - 78, 184, 70, 'forget',
+               { quiet: true, scale: 1 });
+    }
   }
 
   const scene = {
@@ -31,14 +43,14 @@
       scr.shootingStar(scr.w / 2 + 12, 106, 1, 1);
 
       const cx = scr.w / 2;
-      scr.textCenter('COSMIC', cx, 22, 3, 4);
-      scr.textCenter('WIMPOUT', cx, 48, 3, 4);
-      scr.textCenter('A GAME OF POSSIBILITIES AND MYSTIQUE', cx, 76, 2);
+      scr.textCenter('COSMIC', cx, 20, 3, 4);
+      scr.textCenter('WIMPOUT', cx, 46, 3, 4);
+      scr.textCenter('A GAME OF POSSIBILITIES AND MYSTIQUE', cx, 74, 2);
 
       build(scr);
       btns.draw(scr);
 
-      scr.textCenter('C3 INC 1976 - FAN IMPLEMENTATION', cx, scr.h - 12, 1);
+      scr.textCenter('C3 INC 1976 - FAN IMPLEMENTATION', cx, scr.h - 10, 1);
     },
 
     press(x, y) {
@@ -48,6 +60,8 @@
       if (a === 'resume') CW.scenes.go('play');
       else if (a === 'setup') CW.scenes.go('setup');
       else if (a === 'rules') CW.scenes.go('rules');
+      else if (a === 'hints') CW.hints.setEnabled(!CW.hints.enabled);
+      else if (a === 'forget') CW.hints.forget();
       return true;
     },
 

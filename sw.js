@@ -1,22 +1,23 @@
 /* Cosmic Wimpout — offline shell.
    Cache-first: the game is entirely static and must run with no network once
    installed to the home screen. Bump CACHE to ship an update. */
-const CACHE = 'wimpout-v5';
+const CACHE = 'wimpout-v9';
 const SHELL = [
   './',
   './index.html',
   './manifest.webmanifest',
-  './src/art.js?v=5',
-  './src/engine.js?v=5',
-  './src/ai.js?v=5',
-  './src/ui.js?v=5',
-  './src/scenes.js?v=5',
-  './src/render.js?v=5',
-  './src/scene-play.js?v=5',
-  './src/scene-setup.js?v=5',
-  './src/scene-menu.js?v=5',
-  './src/scene-rules.js?v=5',
-  './src/game.js?v=5',
+  './src/art.js?v=9',
+  './src/engine.js?v=9',
+  './src/ai.js?v=9',
+  './src/ui.js?v=9',
+  './src/scenes.js?v=9',
+  './src/hints.js?v=9',
+  './src/render.js?v=9',
+  './src/scene-play.js?v=9',
+  './src/scene-setup.js?v=9',
+  './src/scene-menu.js?v=9',
+  './src/scene-rules.js?v=9',
+  './src/game.js?v=9',
   './icons/icon-180.png',
   './icons/icon-192.png',
   './icons/icon-512.png',
