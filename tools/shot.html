@@ -1,0 +1,41 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>shot</title>
+<style>
+  html, body { margin: 0; background: #1a0f2e; overflow: hidden; }
+  canvas { width: 100vw; image-rendering: pixelated; display: block; }
+</style></head>
+<body>
+<!-- Renders one staged frame through the real renderer, for the README image.
+     game.js is deliberately not loaded: we want a still, not a running game. -->
+<canvas id="screen" width="468" height="216"></canvas>
+<script src="../src/art.js"></script>
+<script src="../src/engine.js"></script>
+<script src="../src/ai.js"></script>
+<script src="../src/render.js"></script>
+<script>
+const cv = document.getElementById('screen');
+const ctx = cv.getContext('2d', { alpha: false });
+ctx.imageSmoothingEnabled = false;
+const scr = new CW.Screen(ctx, cv.width, cv.height);
+const R = CW.rules;
+
+const s = R.newGame({ goal: 300 });
+s.players[0].banked = 145; s.players[0].onBoard = true;
+s.players[1].banked = 220; s.players[1].onBoard = true;
+s.turn.points = 55;
+s.phase = 'SELECT';
+s.turn.result = { c0: 10, c1: 2, c2: 4, c3: 5, s: 'S' };
+s.turn.analysis = R.analyse(s.turn.result, []);
+s.turn.kept = { c0: true, s: true };          // two cubes held, two dim, one free
+s.message = 'PICK YOUR DICE';
+
+const view = {
+  faces: { c0: 10, c1: 2, c2: 4, c3: 5, s: 'S' },
+  jitter: { c0: [2, -1], c1: [-2, 1], c2: [1, 2], c3: [-1, -2], s: [2, 1] },
+  aside: {},
+  stars: new CW.Stars(110, 9),
+};
+CW.render.draw(scr, s, view, 1400);
+document.title = 'ready';
+</script>
+</body></html>
