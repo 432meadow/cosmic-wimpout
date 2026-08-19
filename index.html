@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Cosmic Wimpout</title>
+
+<!-- installed-app behaviour on iOS -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Wimpout">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#1a0f2e">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" href="icons/icon-192.png">
+
+<style>
+  html, body {
+    margin: 0; padding: 0; height: 100%; width: 100%;
+    background: #1a0f2e;                 /* palette void, so insets blend */
+    overflow: hidden;
+    overscroll-behavior: none;
+    font-family: ui-monospace, monospace;
+    -webkit-user-select: none; user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+  }
+  #wrap {
+    position: fixed; inset: 0;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right)
+             env(safe-area-inset-bottom) env(safe-area-inset-left);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 10px;
+  }
+  #screen {
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    display: block;
+    touch-action: none;                  /* no pan/zoom stealing our taps */
+    box-shadow: 0 0 0 2px #2a1b47, 0 0 60px rgba(120, 70, 180, .35);
+  }
+  #hint {
+    text-align: center; color: #4b3768; font-size: 11px;
+    letter-spacing: .08em; pointer-events: none; height: 13px;
+  }
+  /* the shadow reads as a bezel on desktop, but wastes edge on a phone */
+  @media (hover: none) {
+    #wrap { padding: 0; gap: 0; }
+    #screen { box-shadow: none; }
+    #hint { display: none; }
+  }
+</style>
+</head>
+<body>
+  <div id="wrap">
+    <canvas id="screen" width="384" height="216"></canvas>
+    <div id="hint">SPACE ROLL / TAKE &nbsp;·&nbsp; B BANK &nbsp;·&nbsp; 1-5 PICK CUBE &nbsp;·&nbsp; P PALETTE &nbsp;·&nbsp; M MUTE</div>
+  </div>
+
+  <!-- ?v= must be bumped together with CACHE in sw.js on every ship, otherwise
+       a cache-first service worker pins the old code on installed devices. -->
+  <script src="src/art.js?v=2"></script>
+  <script src="src/engine.js?v=2"></script>
+  <script src="src/ai.js?v=2"></script>
+  <script src="src/render.js?v=2"></script>
+  <script src="src/game.js?v=2"></script>
+  <script>
+    // Service worker only works over http(s); file:// still runs fine without it.
+    if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+      addEventListener('load', () => navigator.serviceWorker.register('sw.js'));
+    }
+  </script>
+</body>
+</html>

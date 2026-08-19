@@ -1,0 +1,14 @@
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+
+# Node / Capacitor, if we wrap the PWA later
+node_modules/
+ios/App/Pods/
+
+# Simulation intermediates. results.json and the PDF are kept: they are the
+# deliverable and the data behind it. The HTML is only a step on the way there.
+sim/out/report.html

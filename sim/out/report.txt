@@ -1,0 +1,70 @@
+==============================================================================
+1. HAZARD PER THROW   (120,000 trials each)
+==============================================================================
+state                                    wimp   clears  extends    train
+5 cubes, nothing forbidden               5.7%    64.3%    29.9%     0.1%
+5 cubes, forbidden {4}                   1.9%    71.3%    26.7%     0.1%
+5 cubes, forbidden {2,3,4,6}             0.0%    87.9%    12.0%     0.1%
+5 cubes, forbidden {10}                 14.4%    55.7%    29.9%     0.1%
+5 cubes, forbidden {5,10}               43.9%    10.0%    46.0%     0.1%
+2 cubes, clearing a flash of 4s         23.9%    76.1%     0.0%     0.0%
+2 cubes, clearing a flash of 10s        48.0%    52.0%     0.0%     0.0%
+1 cube,  clearing a flash of 10s        59.9%    40.1%     0.0%     0.0%
+
+==============================================================================
+2. BASELINE TURNS   (bank as soon as legal, no chain mechanic)
+==============================================================================
+  opening turn (needs 35)      wimpout  66.3%   mean   21.1 pts   rerolls/turn 0.09
+  normal turn                  wimpout  22.3%   mean   19.3 pts   rerolls/turn 0.07
+
+==============================================================================
+3. HOW DEEP DO FLASH CHAINS GO?
+==============================================================================
+  strict  greedy   0:59.5%  1:38.2%  2:2.2%  3:0.0%  4:0.0%
+  strict  minimal  0:57.1%  1:42.4%  2:0.6%  3:0.0%  4:0.0%
+  turn    greedy   0:59.3%  1:33.7%  2:5.7%  3:1.0%  4:0.2%
+  turn    minimal  0:56.9%  1:38.0%  2:4.3%  3:0.6%  4:0.1%
+
+==============================================================================
+4. IS CHASING A CHAIN WORTH IT?   mean points per turn
+==============================================================================
+
+  chain_mode = strict
+    chase to         no mult      x(1+k)        x2^k
+    depth 0             19.3        29.8        31.2
+    depth 1             15.0        31.9        33.4
+    depth 2              1.5         4.9         6.5
+    depth 3              0.1         0.3         0.4
+
+  chain_mode = turn
+    chase to         no mult      x(1+k)        x2^k
+    depth 0             19.4        31.2        33.9
+    depth 1             15.6        34.7        38.2
+    depth 2              5.3        17.7        25.1
+    depth 3              1.6         7.3        17.2
+
+==============================================================================
+5. SCORING-SURFACE SCARCITY
+==============================================================================
+scoring rule                  turn wimp    mean   forbid{2}  forbid{10}
+base rules (5,10 score)           22.1%    19.2        1.9%       14.3%
++ half moons score 5              12.2%    29.1        1.9%        1.9%
++ pyramids score 5                12.6%    28.2        0.0%        2.9%
++ both 2s and 3s score             6.7%    40.8        0.0%        0.0%
+
+==============================================================================
+6. WHAT THE REROLL CLAUSE IS WORTH   (wimpout rate per throw)
+==============================================================================
+state                                   legacy   correct     delta
+5 cubes, forbidden {4}                    6.9%      1.9%     -5.0%
+5 cubes, forbidden {2,3,4,6}              9.9%      0.0%     -9.9%
+5 cubes, forbidden {10}                  24.9%     14.5%    -10.4%
+5 cubes, forbidden {5,10}                72.0%     43.8%    -28.2%
+2 cubes, clearing a flash of 4s          33.2%     23.9%     -9.3%
+2 cubes, clearing a flash of 10s         55.5%     47.9%     -7.6%
+1 cube,  clearing a flash of 10s         66.6%     59.9%     -6.7%
+
+  legacy  = a cube on a flash face is dead, and a scoreless throw busts
+  correct = that cube is re-thrown until keepable or genuinely busted
+
+wrote sim/out/results.json

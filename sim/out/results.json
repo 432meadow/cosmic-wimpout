@@ -1,0 +1,255 @@
+{
+ "trials": 120000,
+ "seed": 20260818,
+ "reroll_clause": true,
+ "hazard": [
+  {
+   "case": "5 cubes, nothing forbidden",
+   "wimpout": 0.057466666666666666,
+   "clears": 0.6428583333333333,
+   "extends": 0.299025,
+   "train": 0.00065
+  },
+  {
+   "case": "5 cubes, forbidden {4}",
+   "wimpout": 0.019325,
+   "clears": 0.712725,
+   "extends": 0.2672083333333333,
+   "train": 0.0007416666666666667
+  },
+  {
+   "case": "5 cubes, forbidden {2,3,4,6}",
+   "wimpout": 0,
+   "clears": 0.87925,
+   "extends": 0.11996666666666667,
+   "train": 0.0007833333333333333
+  },
+  {
+   "case": "5 cubes, forbidden {10}",
+   "wimpout": 0.14380833333333334,
+   "clears": 0.5567833333333333,
+   "extends": 0.29868333333333336,
+   "train": 0.0007250000000000001
+  },
+  {
+   "case": "5 cubes, forbidden {5,10}",
+   "wimpout": 0.43903333333333333,
+   "clears": 0.10006666666666666,
+   "extends": 0.460125,
+   "train": 0.000775
+  },
+  {
+   "case": "2 cubes, clearing a flash of 4s",
+   "wimpout": 0.23940833333333333,
+   "clears": 0.7605916666666667,
+   "extends": 0,
+   "train": 0
+  },
+  {
+   "case": "2 cubes, clearing a flash of 10s",
+   "wimpout": 0.48030833333333334,
+   "clears": 0.5196916666666667,
+   "extends": 0,
+   "train": 0
+  },
+  {
+   "case": "1 cube,  clearing a flash of 10s",
+   "wimpout": 0.5988166666666667,
+   "clears": 0.40118333333333334,
+   "extends": 0,
+   "train": 0
+  }
+ ],
+ "baseline": [
+  {
+   "case": "opening turn (needs 35)",
+   "wimpout": 0.662925,
+   "mean_points": 21.073166666666665,
+   "rerolls_per_turn": 0.092275
+  },
+  {
+   "case": "normal turn",
+   "wimpout": 0.22250833333333334,
+   "mean_points": 19.331458333333334,
+   "rerolls_per_turn": 0.07189166666666667
+  }
+ ],
+ "chain_depth": [
+  {
+   "chain_mode": "strict",
+   "policy": "greedy",
+   "depths": {
+    "0": 0.5954,
+    "1": 0.381975,
+    "2": 0.022183333333333333,
+    "3": 0.000425,
+    "4": 1.6666666666666667e-05
+   }
+  },
+  {
+   "chain_mode": "strict",
+   "policy": "minimal",
+   "depths": {
+    "0": 0.57055,
+    "1": 0.4236916666666667,
+    "2": 0.005758333333333333,
+    "3": 0.0,
+    "4": 0.0
+   }
+  },
+  {
+   "chain_mode": "turn",
+   "policy": "greedy",
+   "depths": {
+    "0": 0.5928916666666667,
+    "1": 0.3368583333333333,
+    "2": 0.057125,
+    "3": 0.009633333333333334,
+    "4": 0.001958333333333333
+   }
+  },
+  {
+   "chain_mode": "turn",
+   "policy": "minimal",
+   "depths": {
+    "0": 0.568675,
+    "1": 0.3802833333333333,
+    "2": 0.042708333333333334,
+    "3": 0.006383333333333334,
+    "4": 0.0010916666666666666
+   }
+  }
+ ],
+ "chasing": [
+  {
+   "chain_mode": "strict",
+   "chase_to": 0,
+   "no mult": 19.254833333333334,
+   "x(1+k)": 29.842583333333334,
+   "x2^k": 31.20375
+  },
+  {
+   "chain_mode": "strict",
+   "chase_to": 1,
+   "no mult": 15.006333333333334,
+   "x(1+k)": 31.893083333333333,
+   "x2^k": 33.416333333333334
+  },
+  {
+   "chain_mode": "strict",
+   "chase_to": 2,
+   "no mult": 1.4704166666666667,
+   "x(1+k)": 4.898166666666667,
+   "x2^k": 6.495333333333333
+  },
+  {
+   "chain_mode": "strict",
+   "chase_to": 3,
+   "no mult": 0.06408333333333334,
+   "x(1+k)": 0.2564166666666667,
+   "x2^k": 0.4
+  },
+  {
+   "chain_mode": "turn",
+   "chase_to": 0,
+   "no mult": 19.397916666666667,
+   "x(1+k)": 31.199,
+   "x2^k": 33.89841666666667
+  },
+  {
+   "chain_mode": "turn",
+   "chase_to": 1,
+   "no mult": 15.616666666666667,
+   "x(1+k)": 34.72558333333333,
+   "x2^k": 38.20916666666667
+  },
+  {
+   "chain_mode": "turn",
+   "chase_to": 2,
+   "no mult": 5.303166666666667,
+   "x(1+k)": 17.676833333333335,
+   "x2^k": 25.095666666666666
+  },
+  {
+   "chain_mode": "turn",
+   "chase_to": 3,
+   "no mult": 1.6070833333333334,
+   "x(1+k)": 7.269083333333334,
+   "x2^k": 17.216
+  }
+ ],
+ "scoring_surface": [
+  {
+   "rule": "base rules (5,10 score)",
+   "turn_wimpout": 0.22128333333333333,
+   "mean_points": 19.236416666666667,
+   "forbid_2": 0.0193,
+   "forbid_10": 0.143275
+  },
+  {
+   "rule": "+ half moons score 5",
+   "turn_wimpout": 0.12214166666666666,
+   "mean_points": 29.068416666666668,
+   "forbid_2": 0.019108333333333335,
+   "forbid_10": 0.01855
+  },
+  {
+   "rule": "+ pyramids score 5",
+   "turn_wimpout": 0.125525,
+   "mean_points": 28.22404166666667,
+   "forbid_2": 0,
+   "forbid_10": 0.029283333333333335
+  },
+  {
+   "rule": "+ both 2s and 3s score",
+   "turn_wimpout": 0.06690833333333333,
+   "mean_points": 40.826708333333336,
+   "forbid_2": 0,
+   "forbid_10": 0
+  }
+ ],
+ "reroll_comparison": [
+  {
+   "case": "5 cubes, forbidden {4}",
+   "legacy": 0.069,
+   "correct": 0.01905,
+   "delta": -0.04995000000000001
+  },
+  {
+   "case": "5 cubes, forbidden {2,3,4,6}",
+   "legacy": 0.09850833333333334,
+   "correct": 0,
+   "delta": -0.09850833333333334
+  },
+  {
+   "case": "5 cubes, forbidden {10}",
+   "legacy": 0.248825,
+   "correct": 0.14499166666666666,
+   "delta": -0.10383333333333333
+  },
+  {
+   "case": "5 cubes, forbidden {5,10}",
+   "legacy": 0.720125,
+   "correct": 0.438425,
+   "delta": -0.2817
+  },
+  {
+   "case": "2 cubes, clearing a flash of 4s",
+   "legacy": 0.332025,
+   "correct": 0.23916666666666667,
+   "delta": -0.09285833333333335
+  },
+  {
+   "case": "2 cubes, clearing a flash of 10s",
+   "legacy": 0.5549083333333333,
+   "correct": 0.4787416666666667,
+   "delta": -0.07616666666666666
+  },
+  {
+   "case": "1 cube,  clearing a flash of 10s",
+   "legacy": 0.6662083333333333,
+   "correct": 0.5989416666666667,
+   "delta": -0.06726666666666659
+  }
+ ]
+}
