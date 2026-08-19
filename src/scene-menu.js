@@ -1,7 +1,18 @@
-/* Cosmic Wimpout — main menu. */
+/* Cosmic Wimpout — main menu.
+
+   Layout note: the primary stack is capped at three entries and centred in the
+   band between the subtitle and the secondary row. RECORDS and the hints toggle
+   are secondary actions and live along the bottom, which is also what keeps the
+   stack from growing into the furniture -- at four entries it collided with the
+   subtitle above and the footer below, and at three it already clipped the row
+   beneath it. */
 (function (global) {
   'use strict';
   const CW = global.CW;
+
+  const TITLE_Y = 18, SUB_Y = 68;
+  const BAND_TOP = 78, BAND_BOTTOM = 178;   // room the stack may occupy
+  const SECONDARY_Y = 182, SECONDARY_H = 22;
 
   const btns = new CW.ui.Buttons();
   let stars = null;
@@ -17,19 +28,16 @@
       items.push({ label: 'PLAY', action: 'setup' });
     }
     items.push({ label: 'HOW TO PLAY', action: 'rules' });
-    if (CW.stats.any()) items.push({ label: 'RECORDS', action: 'stats' });
 
-    // centre the stack rather than pinning its top, so two and three items
-    // both sit clear of the footer
     const total = items.length * CW.ui.BTN_H + (items.length - 1) * 8;
-    btns.clear().stack(cx, Math.round(142 - total / 2), 132, items, 8);
+    const top = Math.round((BAND_TOP + BAND_BOTTOM) / 2 - total / 2);
+    btns.clear().stack(cx, top, 132, items, 8);
 
-    const H = CW.hints;
-    btns.add('HINTS ' + (H.enabled ? 'ON' : 'OFF'), 8, 184, 62, 'hints',
-             { quiet: true, scale: 1 });
-    if (H.seenCount() > 0) {
-      btns.add('RESET HINTS', scr.w - 78, 184, 70, 'forget',
-               { quiet: true, scale: 1 });
+    btns.add('HINTS ' + (CW.hints.enabled ? 'ON' : 'OFF'), 8, SECONDARY_Y, 62,
+             'hints', { quiet: true, scale: 1, h: SECONDARY_H });
+    if (CW.stats.any()) {
+      btns.add('RECORDS', scr.w - 70, SECONDARY_Y, 62, 'stats',
+               { quiet: true, scale: 1, h: SECONDARY_H });
     }
   }
 
@@ -44,14 +52,14 @@
       scr.shootingStar(scr.w / 2 + 12, 106, 1, 1);
 
       const cx = scr.w / 2;
-      scr.textCenter('COSMIC', cx, 20, 3, 4);
-      scr.textCenter('WIMPOUT', cx, 46, 3, 4);
-      scr.textCenter('A GAME OF POSSIBILITIES AND MYSTIQUE', cx, 74, 2);
+      scr.textCenter('COSMIC', cx, TITLE_Y, 3, 4);
+      scr.textCenter('WIMPOUT', cx, TITLE_Y + 24, 3, 4);
+      scr.textCenter("MORE THAN AN EXPERIENCE ...IT'S A GAME!", cx, SUB_Y, 2);
 
       build(scr);
       btns.draw(scr);
 
-      scr.textCenter('C3 INC 1976 - FAN IMPLEMENTATION', cx, scr.h - 10, 1);
+      scr.textCenter('C3 INC 1976 - FAN IMPLEMENTATION', cx, scr.h - 8, 1);
     },
 
     press(x, y) {
@@ -63,7 +71,6 @@
       else if (a === 'rules') CW.scenes.go('rules');
       else if (a === 'stats') CW.scenes.go('stats');
       else if (a === 'hints') CW.hints.setEnabled(!CW.hints.enabled);
-      else if (a === 'forget') CW.hints.forget();
       return true;
     },
 
@@ -74,6 +81,7 @@
         return true;
       }
       if (k === 'h' || k === '?') { CW.scenes.go('rules'); return true; }
+      if (k === 'r' && CW.stats.any()) { CW.scenes.go('stats'); return true; }
       return false;
     },
   };

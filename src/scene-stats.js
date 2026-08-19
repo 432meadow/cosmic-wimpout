@@ -59,9 +59,14 @@
 
       btns.clear();
       btns.add('BACK', 8, 182, 60, 'menu', { quiet: true, scale: 1 });
+      // both resets live together, away from anything you might hit by accident
+      if (CW.hints.seenCount() > 0) {
+        btns.add('RESET HINTS', scr.w - 174, 182, 76, 'forget',
+                 { quiet: true, scale: 1 });
+      }
       if (CW.stats.any()) {
         btns.add(confirming ? 'SURE? TAP AGAIN' : 'CLEAR RECORDS',
-                 scr.w - 96, 182, 88, 'reset', { quiet: true, scale: 1 });
+                 scr.w - 94, 182, 86, 'reset', { quiet: true, scale: 1 });
       }
       btns.draw(scr);
     },
@@ -71,6 +76,7 @@
       if (!a) { confirming = false; return true; }
       CW.app.blips.pick();
       if (a === 'menu') CW.scenes.go('menu');
+      else if (a === 'forget') { CW.hints.forget(); confirming = false; }
       else if (a === 'reset') {
         // destructive and irreversible, so make it take two taps
         if (confirming) { CW.stats.reset(); confirming = false; }
