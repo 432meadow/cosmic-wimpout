@@ -47,6 +47,11 @@
     state = R.newGame(opts || { goal: 300 });
     resetView();
     persist();
+    /* Warm the AI's risk table now rather than on its first decision: it is
+       measured per rule set and costs a few dozen milliseconds, which would
+       otherwise land as a hitch partway through the opening turn. */
+    CW.ai.tableFor(state.mods);
+
     // announce the extra rule up front; it governs the whole game
     if (state.light) CW.fanfare.fire('light', state.light.name, state.light.blurb);
   }

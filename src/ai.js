@@ -55,20 +55,108 @@
     return (player && PROFILES[player.name]) || PROFILES.ORACLE;
   }
 
-  function wimpChance(n, forbidden) {
-    const row = RISK[Math.max(1, Math.min(5, n || 5))];
-    let k = 0;
-    if (forbidden.indexOf(5) !== -1) k++;
-    if (forbidden.indexOf(10) !== -1) k++;
-    if (k >= 2) return row[3];
-    if (k === 1) return row[2];
-    return forbidden.length ? row[1] : row[0];
+  /* The table above is exact for the printed rules and badly wrong for several
+     Guiding Lights -- under HALF MOONS RISE the true five-cube bust rate is 0.8%
+     against the 5.8% assumed here, so the AI would play as if in danger while
+     nearly safe. Rather than hand-tabulate every variant (and re-tabulate every
+     time one is added), the AI measures the rules it is actually playing under.
+
+     One calibration per rule set, cached by signature, a few dozen milliseconds
+     behind the opening announcement. */
+  const cache = {};
+
+  function signature(m) {
+    return JSON.stringify([m.singles, m.sunTrain, m.sunMatches,
+                           m.strictReroll, m.sampler, m.fullHouse]);
   }
 
-  function contValue(handAfter, forbidden, pointsSoFar) {
+  // does a single throw end the turn, once the Reroll Clause has settled?
+  function bustOnce(hand, forbidden, m) {
+    const R = CW.rules;
+    const result = R.throwDice(hand);
+    for (let g = 0; g < 40; g++) {
+      const a = R.analyse(result, forbidden, m);
+      if (a.special) return { bust: a.special === 'supernova', pts: a.flashPoints };
+      if (!a.wimpout) {
+        let pts = a.flashPoints;
+        for (const o of a.optional) pts += o.points;
+        return { bust: false, pts: pts };
+      }
+      if (!a.forced.length) return { bust: true, pts: 0 };
+      const back = m.strictReroll ? hand : a.forced;
+      Object.assign(result, R.throwDice(back));
+    }
+    return { bust: true, pts: 0 };
+  }
+
+  function calibrate(m) {
+    const R = CW.rules;
+    const scoring = Object.keys(m.singles).map(Number);
+    const dead = [2, 3, 4, 6].filter(f => scoring.indexOf(f) === -1);
+    // one representative forbidden set per class
+    const sets = [
+      [],
+      dead.length ? [dead[0]] : [],
+      [scoring[scoring.length - 1]],
+      scoring.slice(-2),
+    ];
+    const risk = {}, gain = {};
+    for (let n = 1; n <= 5; n++) {
+      const hand = n === 5 ? R.DICE.slice() : R.DICE.slice(0, n - 1).concat(['s']);
+      risk[n] = []; gain[n] = [];
+      for (let c = 0; c < 4; c++) {
+        let bust = 0, pts = 0, ok = 0;
+        for (let i = 0; i < 1200; i++) {
+          const r = bustOnce(hand, sets[c], m);
+          if (r.bust) bust++; else { ok++; pts += r.pts; }
+        }
+        risk[n].push(bust / 1200);
+        gain[n].push(ok ? pts / ok : 0);
+      }
+    }
+    return { risk: risk, gain: gain, scoring: scoring };
+  }
+
+  function tableFor(m) {
+    const key = signature(m);
+    if (!cache[key]) cache[key] = calibrate(m);
+    return cache[key];
+  }
+
+  // how many of the forbidden faces actually score under these rules?
+  function forbiddenClass(forbidden, tbl) {
+    if (!forbidden.length) return 0;
+    let k = 0;
+    for (const f of forbidden) if (tbl.scoring.indexOf(f) !== -1) k++;
+    return k >= 2 ? 3 : (k === 1 ? 2 : 1);
+  }
+
+  function wimpChance(n, forbidden, m) {
+    n = Math.max(1, Math.min(5, n || 5));
+    if (!m) {                                  // no rule set given: printed rules
+      const row = RISK[n];
+      let k = 0;
+      if (forbidden.indexOf(5) !== -1) k++;
+      if (forbidden.indexOf(10) !== -1) k++;
+      if (k >= 2) return row[3];
+      if (k === 1) return row[2];
+      return forbidden.length ? row[1] : row[0];
+    }
+    const tbl = tableFor(m);
+    return tbl.risk[n][forbiddenClass(forbidden, tbl)];
+  }
+
+  function expGain(n, forbidden, m) {
+    n = Math.max(1, Math.min(5, n || 5));
+    if (!m) return EXP_GAIN[n];
+    const tbl = tableFor(m);
+    return tbl.gain[n][forbiddenClass(forbidden, tbl)];
+  }
+
+  function contValue(handAfter, forbidden, pointsSoFar, m) {
     const n = handAfter === 0 ? 5 : handAfter;   // 0 means a sweep: five fresh cubes
-    const p = wimpChance(n, forbidden);
-    return (1 - p) * (pointsSoFar + EXP_GAIN[n]);
+    const p = wimpChance(n, forbidden, m);
+    return (1 - p) * (pointsSoFar + expGain(n, forbidden, m));
   }
 
   /* Which optional dice to set aside.
@@ -103,13 +191,15 @@
     const afterMin = t.points + flashPts + minPts;
 
     // If taking everything lets us stop, and stopping is fine, take everything.
+    // the opening threshold is a variant, not a constant
+    const m = state.mods || CW.rules.BASE_MODS;
     const canStopAfterAll = a.flash === null && handAll > 0 &&
-                            (p.onBoard || afterAll >= 35);
+                            (p.onBoard || afterAll >= m.openAt);
     if (canStopAfterAll && !shouldPushOn(state, afterAll, handAll, nextForbidden))
       return all;
 
-    return contValue(handAll, nextForbidden, afterAll) >=
-           contValue(handMin, nextForbidden, afterMin) ? all : minSel;
+    return contValue(handAll, nextForbidden, afterAll, m) >=
+           contValue(handMin, nextForbidden, afterMin, m) ? all : minSel;
   }
 
   // Would we keep rolling from this hypothetical position?
@@ -120,9 +210,17 @@
     if (p.banked + points >= state.goal) return false;               // goal reached
     const prof = profileOf(p);
     if (points >= prof.cap) return false;
+    const m = state.mods || CW.rules.BASE_MODS;
+
+    /* Under MERCY the first bust of the game banks the turn instead of losing
+       it, so while that pass is still in hand there is no downside to another
+       throw. Without this the AI plays as though it could lose points it
+       cannot, and a reckless policy beats it outright. */
+    if (m.mercy && !p.usedMercy && (p.onBoard || points >= m.openAt)) return true;
+
     const n = handSize === 0 ? 5 : handSize;   // 0 means a sweep: five fresh cubes
-    const risk = wimpChance(n, forbidden);
-    return (1 - risk) * EXP_GAIN[n] * prof.nerve > risk * points;
+    const risk = wimpChance(n, forbidden, m);
+    return (1 - risk) * expGain(n, forbidden, m) * prof.nerve > risk * points;
   }
 
   // In Last Licks we must actually pass the leader, so banking short is pointless.
@@ -139,6 +237,6 @@
 
   CW.ai = {
     chooseKeeps, shouldRoll, wimpChance, chaseTarget,
-    PROFILES, ROSTER, profileOf,
+    PROFILES, ROSTER, profileOf, expGain, tableFor,
   };
 })(window);

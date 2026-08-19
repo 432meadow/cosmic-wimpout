@@ -13,7 +13,8 @@
 
   // a minor-ish stack; low enough to sit under everything without masking blips
   const DRONE = [55, 82.5, 110, 164.81];
-  const SPARK = [1174, 1396, 1567, 1760, 2093, 2349];
+  // pitched down from the original set: the top octave read as sharp
+  const SPARK = [784, 880, 1046, 1174, 1396, 1567];
 
   function Ambient(blips) {
     this.blips = blips;
@@ -64,22 +65,34 @@
     clearTimeout(this.timer);
     this.timer = setTimeout(() => {
       if (this.on) { this.sparkle(); this.schedule(); }
-    }, 1400 + Math.random() * 3600);
+    }, 2200 + Math.random() * 4800);
   };
 
+  /* Softened: the first version peaked at 0.05 with a 20ms attack and reached
+     into the top octave, which read as a sharp ping over a quiet drone. Now it
+     is a third of the level, eases in, and passes through a gentle lowpass so
+     it arrives as a shimmer rather than a spike. */
   Ambient.prototype.sparkle = function () {
     const ac = this.blips.ctx;
     if (!ac || !this.blips.on || !this.gain) return;
     const f = SPARK[(Math.random() * SPARK.length) | 0];
-    const o = ac.createOscillator(), g = ac.createGain();
+    const t = ac.currentTime;
+
+    const o = ac.createOscillator(), g = ac.createGain(), lp = ac.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.frequency.setValueAtTime(1800, t);
+    lp.Q.setValueAtTime(0.4, t);
+
     o.type = 'sine';
-    o.frequency.setValueAtTime(f, ac.currentTime);
-    o.frequency.exponentialRampToValueAtTime(f * 1.02, ac.currentTime + 0.5);
-    g.gain.setValueAtTime(0.0001, ac.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.05, ac.currentTime + 0.02);
-    g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + 0.9);
-    o.connect(g); g.connect(ac.destination);
-    o.start(); o.stop(ac.currentTime + 1.0);
+    o.frequency.setValueAtTime(f, t);
+    o.frequency.exponentialRampToValueAtTime(f * 1.015, t + 0.8);
+
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.018, t + 0.09);   // slow enough not to click
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 1.5);
+
+    o.connect(lp); lp.connect(g); g.connect(ac.destination);
+    o.start(); o.stop(t + 1.6);
   };
 
   Ambient.prototype.stop = function () {

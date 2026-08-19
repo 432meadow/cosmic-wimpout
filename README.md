@@ -63,6 +63,11 @@ feel like the game rather than bolted onto it. Every variant lives as data in
 `BASE_MODS`, so the engine stays one code path instead of growing a branch per
 rule. Play to 300, 500 or 1000.
 
+The opponents adapt: rather than assume the printed odds, they **measure the
+rules actually in play** at the start of each game. Under HALF MOONS RISE the
+true five-cube bust rate is 0.8% against the printed game's 5.8%, and an
+opponent working from the wrong number plays as if in danger while nearly safe.
+
 ## It remembers
 
 The match is written to `localStorage` as you play and picked back up on a cold
@@ -103,7 +108,7 @@ and each is isolated in the engine so it can be flipped.
 | Path | Role |
 | --- | --- |
 | `src/engine.js` | Rules. Pure state machine, no rendering, no DOM. |
-| `src/ai.js` | Opponents. Risk table measured against the engine, not guessed. |
+| `src/ai.js` | Opponents. Calibrates its risk table to whatever rules are in play. |
 | `src/art.js` | Palette, 3×5 font, die faces, Sun-Star corona, audio. |
 | `src/render.js` | Board drawing. Reads state, writes pixels, owns no logic. |
 | `src/ui.js` | Shared button widget and text wrapper. |
