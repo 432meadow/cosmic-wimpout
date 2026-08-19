@@ -23,6 +23,38 @@
   // Mean points from a throw that does score.
   const EXP_GAIN = { 0: 0, 1: 7, 2: 10, 3: 14, 4: 18, 5: 24 };
 
+  /* Opponent personalities.
+
+     There is a hard ceiling on how different these can feel, and it belongs to
+     the game rather than the code: measured over 30k turns, 68% of all throws
+     are FORCED by the rules (Futtless, the five-cube sweep, the 35-point
+     opening), and 65% of all busts happen on one. No temperament dodges those.
+
+     Of the knobs tried, only two survived measurement:
+
+       cap    turn-score ceiling. The real lever, but only below ~25, because
+              the break-even policy already stops near 26 on its own.
+       nerve  scales the reward side of the push/bank comparison. Inert BELOW
+              1.0 -- the margin at three or four cubes is too wide for scaling
+              down to flip it -- but bites above 1.0, turning stop into push.
+
+     A `minHand` floor was also tried and removed: chooseKeeps already keeps the
+     hand at three or four cubes, so the AI never chose to throw one anyway.
+
+     Measured bust rate / mean points per turn, 40k turns each:
+     HERMIT 24% / 24.4, ORACLE 34% / 26.8, COMET 51% / 25.8. Near-identical
+     yield, very different shape -- which is the point. */
+  const PROFILES = {
+    ORACLE: { nerve: 1.00, cap: 999, blurb: 'PLAYS THE ODDS STRAIGHT' },
+    HERMIT: { nerve: 1.00, cap: 12,  blurb: 'BANKS EARLY AND OFTEN' },
+    COMET:  { nerve: 2.20, cap: 999, blurb: 'CHASES EVERYTHING. BURNS HALF THE TIME' },
+  };
+  const ROSTER = Object.keys(PROFILES);
+
+  function profileOf(player) {
+    return (player && PROFILES[player.name]) || PROFILES.ORACLE;
+  }
+
   function wimpChance(n, forbidden) {
     const row = RISK[Math.max(1, Math.min(5, n || 5))];
     let k = 0;
@@ -86,9 +118,11 @@
     const target = chaseTarget(state);
     if (target != null && p.banked + points <= target) return true;  // must beat it
     if (p.banked + points >= state.goal) return false;               // goal reached
-    const n = handSize === 0 ? 5 : handSize;
+    const prof = profileOf(p);
+    if (points >= prof.cap) return false;
+    const n = handSize === 0 ? 5 : handSize;   // 0 means a sweep: five fresh cubes
     const risk = wimpChance(n, forbidden);
-    return (1 - risk) * EXP_GAIN[n] > risk * points;
+    return (1 - risk) * EXP_GAIN[n] * prof.nerve > risk * points;
   }
 
   // In Last Licks we must actually pass the leader, so banking short is pointless.
@@ -103,5 +137,8 @@
     return shouldPushOn(state, t.points, t.hand.length, t.forbidden);
   }
 
-  CW.ai = { chooseKeeps, shouldRoll, wimpChance, chaseTarget };
+  CW.ai = {
+    chooseKeeps, shouldRoll, wimpChance, chaseTarget,
+    PROFILES, ROSTER, profileOf,
+  };
 })(window);

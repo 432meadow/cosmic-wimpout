@@ -94,14 +94,21 @@
   }
 
   // --------------------------------------------------------------- game state
+  /* opts.opponents is a list of opponent names; ai.js owns what each one means,
+     so the engine stays ignorant of personalities. Seat 0 is always the human.
+     Turn order, Last Licks and elimination are all written against players.length
+     and need no changes for a bigger table. */
   function newGame(opts) {
     opts = opts || {};
+    const roster = (opts.opponents && opts.opponents.length)
+      ? opts.opponents.slice(0, 3) : ['ORACLE'];
+    const players = [{ name: 'YOU', banked: 0, onBoard: false, out: false, human: true }];
+    for (const name of roster) {
+      players.push({ name, banked: 0, onBoard: false, out: false, human: false });
+    }
     return {
       goal: opts.goal || 300,
-      players: [
-        { name: 'YOU', banked: 0, onBoard: false, out: false, human: true },
-        { name: 'ORACLE', banked: 0, onBoard: false, out: false, human: false },
-      ],
+      players,
       current: 0,
       phase: 'READY',        // READY | SELECT | TURN_OVER | GAME_OVER
       turn: freshTurn(),

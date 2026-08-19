@@ -62,16 +62,17 @@
        a cache-first service worker pins the old code on installed devices. -->
   <!-- order matters: ui and scenes must exist before any scene registers,
        and game.js boots last -->
-  <script src="src/art.js?v=3"></script>
-  <script src="src/engine.js?v=3"></script>
-  <script src="src/ai.js?v=3"></script>
-  <script src="src/ui.js?v=3"></script>
-  <script src="src/scenes.js?v=3"></script>
-  <script src="src/render.js?v=3"></script>
-  <script src="src/scene-play.js?v=3"></script>
-  <script src="src/scene-menu.js?v=3"></script>
-  <script src="src/scene-rules.js?v=3"></script>
-  <script src="src/game.js?v=3"></script>
+  <script src="src/art.js?v=5"></script>
+  <script src="src/engine.js?v=5"></script>
+  <script src="src/ai.js?v=5"></script>
+  <script src="src/ui.js?v=5"></script>
+  <script src="src/scenes.js?v=5"></script>
+  <script src="src/render.js?v=5"></script>
+  <script src="src/scene-play.js?v=5"></script>
+  <script src="src/scene-setup.js?v=5"></script>
+  <script src="src/scene-menu.js?v=5"></script>
+  <script src="src/scene-rules.js?v=5"></script>
+  <script src="src/game.js?v=5"></script>
   <script>
     // Service worker only works over http(s); file:// still runs fine without it.
     if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {

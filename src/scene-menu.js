@@ -12,9 +12,9 @@
     // A match survives leaving for the menu, so offer to pick it back up.
     if (CW.play && CW.play.hasGame()) {
       items.push({ label: 'RESUME', action: 'resume' });
-      items.push({ label: 'NEW GAME', action: 'new' });
+      items.push({ label: 'NEW GAME', action: 'setup' });
     } else {
-      items.push({ label: 'PLAY', action: 'new' });
+      items.push({ label: 'PLAY', action: 'setup' });
     }
     items.push({ label: 'HOW TO PLAY', action: 'rules' });
     btns.clear().stack(cx, 112, 132, items, 8);
@@ -46,14 +46,15 @@
       if (!a) return true;
       CW.app.blips.pick();
       if (a === 'resume') CW.scenes.go('play');
-      else if (a === 'new') CW.scenes.go('play', { fresh: true });
+      else if (a === 'setup') CW.scenes.go('setup');
       else if (a === 'rules') CW.scenes.go('rules');
       return true;
     },
 
     key(k) {
       if (k === ' ' || k === 'enter') {
-        CW.scenes.go('play', { fresh: !(CW.play && CW.play.hasGame()) });
+        if (CW.play && CW.play.hasGame()) CW.scenes.go('play');
+        else CW.scenes.go('setup');
         return true;
       }
       if (k === 'h' || k === '?') { CW.scenes.go('rules'); return true; }

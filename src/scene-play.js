@@ -25,6 +25,8 @@
   };
 
   const blips = () => CW.app.blips;
+  // Seat 0 is the human by convention, but ask the roster rather than assume it.
+  const isHuman = () => !!(state && state.players[state.current].human);
 
   function scheduleAI(ms) {
     clearTimeout(aiTimer);
@@ -92,7 +94,7 @@
 
     // nothing to choose: show the result for a beat, then take it
     if (state.phase === 'SELECT' && state.turn.analysis &&
-        state.turn.analysis.optional.length === 0 && state.current === 0) {
+        state.turn.analysis.optional.length === 0 && isHuman()) {
       setTimeout(() => { if (state.phase === 'SELECT') doConfirm(); }, 850);
     }
   }
@@ -122,7 +124,7 @@
     R.nextTurn(state);
     view.aside = {}; view.faces = {}; view.jitter = {};
     aiStage = 0;
-    if (state.phase !== 'GAME_OVER' && state.current === 1) scheduleAI(750);
+    if (state.phase !== 'GAME_OVER' && !isHuman()) scheduleAI(750);
   }
 
   function act(action) {
@@ -141,7 +143,7 @@
      scheduleAI exactly once, so the chain can never fork. */
   function aiStep() {
     aiTimer = null;
-    if (!state || state.current !== 1 || state.phase === 'GAME_OVER') {
+    if (!state || isHuman() || state.phase === 'GAME_OVER') {
       aiStage = 0; return;
     }
     if (view.busy) return scheduleAI(120);
@@ -186,7 +188,7 @@
       if (!view.stars) view.stars = new CW.Stars(110, 9);
       if (!state || (opts && opts.fresh)) newGame(opts && opts.game);
       // an Oracle turn was in flight when we left; pick it back up
-      if (state.current !== 0 && state.phase !== 'GAME_OVER') scheduleAI(600);
+      if (!isHuman() && state.phase !== 'GAME_OVER') scheduleAI(600);
     },
 
     exit() { stopAI(); },
@@ -208,8 +210,11 @@
     draw(scr, t) { CW.render.draw(scr, state, view, t); },
 
     press(x, y) {
-      if (state.current !== 0 && state.phase !== 'GAME_OVER') return true;
       const action = CW.render.buttonAt(x, y);
+      // MENU stays live while opponents play, or you would be trapped watching
+      // three of them take their turns with no way out.
+      if (action === 'menu') { act(action); return true; }
+      if (!isHuman() && state.phase !== 'GAME_OVER') return true;
       if (action) { act(action); return true; }
       if (state.phase === 'SELECT' && !view.busy) {
         for (const id in CW.render.dieRects) {
@@ -225,7 +230,7 @@
 
     key(k, e) {
       if (k === 'escape') { CW.scenes.go('menu'); return true; }
-      if (state.current !== 0 && state.phase !== 'GAME_OVER') return true;
+      if (!isHuman() && state.phase !== 'GAME_OVER') return true;
 
       if (k >= '1' && k <= '5' && state.phase === 'SELECT' && !view.busy) {
         const id = R.DICE[+k - 1];
