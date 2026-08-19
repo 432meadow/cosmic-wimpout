@@ -9,6 +9,8 @@ __pycache__/
 node_modules/
 ios/App/Pods/
 
-# Simulation intermediates. results.json and the PDF are kept: they are the
-# deliverable and the data behind it. The HTML is only a step on the way there.
+# Simulation build products. results.json and report.txt are kept -- small, and
+# they are the data behind the analysis. The HTML and the PDF are generated from
+# those by make_report.py, so they do not belong in history.
 sim/out/report.html
+sim/out/*.pdf

@@ -120,7 +120,7 @@ and each is isolated in the engine so it can be flipped.
 | `src/fanfare.js` | Full-screen moments for trains, wins and Supernovas. |
 | `src/audio.js` | Ambient drone and star sparkles under the menus. |
 | `src/game.js` | Shell: canvas, scaling, loop, input routing. |
-| `sim/` | Monte Carlo analysis and its PDF report. |
+| `sim/` | Monte Carlo analysis. Generates the PDF report; not checked in. |
 | `tools/icon.html` | Generates the app icons from the in-game Sun-Star. |
 
 The separation between `engine.js` and `render.js` is load-bearing: it is what
@@ -137,6 +137,9 @@ a roguelike (it cannot — chains are structurally capped at depth 2).
 python3 sim/flash_chain.py -n 120000 --json sim/out/results.json
 python3 sim/make_report.py          # -> sim/out/cosmic-wimpout-analysis.pdf
 ```
+
+The measurements (`sim/out/results.json`, `report.txt`) are checked in; the PDF
+is a build product and is not.
 
 Its most useful result was catching a rule both it and the engine had wrong: the
 **Reroll Clause re-throws, it does not bust**. Correcting it moved the worst case
