@@ -106,6 +106,15 @@
     if (CW.scenes.key(k, e)) e.preventDefault();
   });
 
+  /* iOS can discard a backgrounded tab without warning, and pagehide is the
+     last event we are reliably given. visibilitychange covers the app-switcher
+     case, where pagehide may never fire at all. */
+  function flush() { if (CW.play && CW.play.persist) CW.play.persist(); }
+  global.addEventListener('pagehide', flush);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') flush();
+  });
+
   // --------------------------------------------------------------------- loop
   function frame(now) {
     CW.scenes.tick(now);

@@ -42,8 +42,26 @@
 
   function newGame(opts) {
     stopAI();
+    counted = false;
+    CW.fanfare.clear();
     state = R.newGame(opts || { goal: 300 });
     resetView();
+    persist();
+  }
+
+  function persist() { CW.save.write(state, view); }
+
+  /* Pick the match back up from a cold start. The view snapshot matters: cubes
+     already set aside have no face recorded in the engine state, so without it
+     a restored board would come back with holes in it. */
+  function restore() {
+    const saved = CW.save.read();
+    if (!saved) return false;
+    state = saved.state;
+    resetView();
+    view.faces = saved.faces || {};
+    view.aside = saved.aside || {};
+    return true;
   }
 
   // ------------------------------------------------------------------- moves
@@ -63,6 +81,7 @@
     if (state.phase !== 'READY' || view.busy) return;
     const thrown = state.turn.hand.slice();
     R.roll(state);
+    persist();
     animateThrow(thrown, 780);
     blips().ensure();
   }
@@ -72,19 +91,36 @@
     if (state.phase !== 'REROLL' || view.busy) return;
     const forced = state.turn.analysis.forced.slice();
     R.rerollForced(state);
+    persist();
     animateThrow(forced, 600);
   }
 
   function finishRoll() {
     view.busy = false;
     for (const d of view.thrown) view.faces[d] = view.trueFaces[d];
-    const b = blips(), ev = state.event;
+    const b = blips(), ev = state.event, a = state.turn.analysis;
     if (ev === 'supernova') b.nova();
     else if (ev === 'wimpout') b.wimp();
     else if (ev === 'flash') b.flash();
     else if (ev === 'instant_win') b.win();
     else if (ev === 'reroll') b.unpick();
     else b.score();
+
+    // Records are the player's own: an Oracle's lucky flash is not an achievement.
+    if (isHuman()) {
+      if (ev === 'flash' && a) CW.stats.note('flash', a.flashPoints);
+      else if (ev === 'wimpout') CW.stats.note('wimpout', view.thrown.length === 5);
+    }
+    if (a && a.special === 'freight') {
+      if (isHuman()) CW.stats.note('freight');
+      CW.fanfare.fire('freight', String(a.flashPoints));
+    } else if (ev === 'supernova') {
+      if (isHuman()) CW.stats.note('supernova');
+      CW.fanfare.fire('supernova', state.players[state.current].name);
+    } else if (ev === 'instant_win') {
+      CW.fanfare.fire('instant_win', state.players[state.current].name);
+    }
+    if (state.phase === 'GAME_OVER' && !counted) { counted = true; CW.stats.gameOver(state); }
 
     // Reroll Clause fired: show the offending cube, then throw it again.
     if (state.phase === 'REROLL') {
@@ -111,19 +147,26 @@
       used.forEach(d => { view.aside[d] = true; });
       blips().pick();
     }
+    persist();
   }
 
   function doBank() {
     if (!R.canBank(state) || view.busy) return;
+    const scored = state.turn.points, mine = isHuman();
     R.bank(state);
+    if (mine) CW.stats.note('bank', scored);
     blips().bank();
+    persist();
   }
 
+  let counted = false;
   function doNext() {
     if (state.phase !== 'TURN_OVER') return;
     R.nextTurn(state);
+    if (state.phase === 'GAME_OVER' && !counted) { counted = true; CW.stats.gameOver(state); }
     view.aside = {}; view.faces = {}; view.jitter = {};
     aiStage = 0;
+    persist();
     if (state.phase !== 'GAME_OVER' && !isHuman()) scheduleAI(750);
   }
 
@@ -213,6 +256,7 @@
     draw(scr, t) {
       CW.render.draw(scr, state, view, t);
       CW.hints.draw(scr, t);
+      CW.fanfare.draw(scr, t);
     },
 
     press(x, y) {
@@ -257,6 +301,7 @@
 
     // used by the menu to decide between PLAY and RESUME
     hasGame() { return !!state && state.phase !== 'GAME_OVER'; },
+    persist,
     newGame,
     state: () => state,
     view,
@@ -264,4 +309,7 @@
 
   CW.scenes.register('play', scene);
   CW.play = scene;
+
+  // Before the shell boots the menu, so RESUME is offered on a cold start.
+  restore();
 })(window);

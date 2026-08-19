@@ -17,6 +17,7 @@
       items.push({ label: 'PLAY', action: 'setup' });
     }
     items.push({ label: 'HOW TO PLAY', action: 'rules' });
+    if (CW.stats.any()) items.push({ label: 'RECORDS', action: 'stats' });
 
     // centre the stack rather than pinning its top, so two and three items
     // both sit clear of the footer
@@ -60,6 +61,7 @@
       if (a === 'resume') CW.scenes.go('play');
       else if (a === 'setup') CW.scenes.go('setup');
       else if (a === 'rules') CW.scenes.go('rules');
+      else if (a === 'stats') CW.scenes.go('stats');
       else if (a === 'hints') CW.hints.setEnabled(!CW.hints.enabled);
       else if (a === 'forget') CW.hints.forget();
       return true;

@@ -40,6 +40,13 @@ Near-identical yield, very different shape. There is a ceiling on how far any of
 them can diverge, and it belongs to the game rather than the code: 68% of all
 throws are *forced* by the rules, and 65% of all busts happen on one.
 
+## It remembers
+
+The match is written to `localStorage` as you play and picked back up on a cold
+start, because a phone will interrupt you and losing a game 200 points into a
+race is the difference between a page and an app. Lifetime records — best turn,
+biggest flash, Freight Trains, Supernovas survived — live under RECORDS.
+
 ## Learning it
 
 Hints explain each rule at the moment the game first applies it — no scripted
@@ -80,6 +87,9 @@ and each is isolated in the engine so it can be flipped.
 | `src/scenes.js` | Scene registry. |
 | `src/scene-*.js` | Menu, opponent setup, rules, and the match itself. |
 | `src/hints.js` | Contextual rule hints and what has been seen. |
+| `src/save.js` | Match persistence across app close. |
+| `src/stats.js` | Lifetime records. |
+| `src/fanfare.js` | Full-screen moments for trains, wins and Supernovas. |
 | `src/game.js` | Shell: canvas, scaling, loop, input routing. |
 | `sim/` | Monte Carlo analysis and its PDF report. |
 | `tools/icon.html` | Generates the app icons from the in-game Sun-Star. |
