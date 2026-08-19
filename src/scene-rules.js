@@ -15,7 +15,8 @@
         'pyramids, starbursts and stars score nothing alone.\n' +
         '\n' +
         'The Flaming Sun is wild. Take it as a 5 or a 10, use it in a flash, or ' +
-        'leave it and roll it again.',
+        'leave it and roll it again - though you must take it if it is the ' +
+        'only cube scoring on that throw.',
     },
     {
       title: 'FLASHES AND TRAINS',
@@ -45,8 +46,8 @@
         'Three rules take away your choice to stop.\n' +
         '\n' +
         '35 TO GET ON THE BOARD. You cannot bank until you have 35. The best ' +
-        'roll without a flash is only 30, so the threshold is out of reach ' +
-        'without one.\n' +
+        'single throw without a flash is only 30, so you need either a flash ' +
+        'or several throws in a row that keep scoring.\n' +
         '\n' +
         'THE FUTTLESS RULE. After a flash you must keep rolling to clear it.\n' +
         '\n' +
@@ -68,8 +69,8 @@
     {
       title: 'WINNING',
       body:
-        'First past 300 triggers LAST LICKS: everyone else gets one final turn ' +
-        'to catch and pass the leader.\n' +
+        'First past the target triggers LAST LICKS: everyone else gets one final ' +
+        'turn to catch and pass the leader.\n' +
         '\n' +
         'Or end it in a single throw. Five stars and the game is yours.\n' +
         '\n' +
