@@ -11,6 +11,49 @@
 
   const SINGLES = { 5: 5, 10: 10 };        // only 5s and 10s score alone
 
+  /* The Guiding Light: "any new rule may be added at any time provided all
+     players agree". Every deviation the game supports lives here as data, so
+     analyse() and the turn rules stay one code path rather than growing
+     branches per variant. BASE is the printed game. */
+  const BASE_MODS = {
+    singles: SINGLES,
+    openAt: 35,
+    sunTrain: false,      // the Sun face may complete a Freight Train
+    sunMatches: false,    // the Sun counts as a flash face while clearing
+    sampler: 0,           // points for five different faces
+    fullHouse: false,     // a flash with a pair alongside scores double
+    strictReroll: false,  // the Reroll Clause re-throws the whole batch
+    mercy: false,         // the first wimpout of the game is forgiven
+  };
+  function mods(s) { return (s && s.mods) || BASE_MODS; }
+
+  /* The pool a Guiding Light is drawn from. Several are the printed rules'
+     genuine ambiguities (RULES.md §5) read the other way, which is why they feel
+     like the game rather than bolted onto it. */
+  const LIGHTS = [
+    { id: 'sampler', name: 'COSMIC SAMPLER',
+      blurb: 'FIVE DIFFERENT FACES SCORE 25', mods: { sampler: 25 } },
+    { id: 'fullhouse', name: 'FULL HOUSE',
+      blurb: 'A FLASH WITH A PAIR ALONGSIDE SCORES DOUBLE', mods: { fullHouse: true } },
+    { id: 'moons', name: 'HALF MOONS RISE',
+      blurb: 'HALF MOONS SCORE 5 EACH', mods: { singles: { 2: 5, 5: 5, 10: 10 } } },
+    { id: 'sunrides', name: 'THE SUN RIDES',
+      blurb: 'THE SUN MAY COMPLETE A FREIGHT TRAIN', mods: { sunTrain: true } },
+    { id: 'sunbetrays', name: 'THE SUN BETRAYS',
+      blurb: 'THE SUN MATCHES YOUR FLASH FACE WHILE CLEARING', mods: { sunMatches: true } },
+    { id: 'cleansweep', name: 'CLEAN SWEEP',
+      blurb: 'MATCHING A FLASH FACE RE-THROWS THE WHOLE BATCH', mods: { strictReroll: true } },
+    { id: 'steep', name: 'STEEP ASCENT',
+      blurb: 'YOU NEED 70 TO GET ON THE BOARD', mods: { openAt: 70 } },
+    { id: 'mercy', name: 'MERCY',
+      blurb: 'YOUR FIRST WIMPOUT EACH GAME IS FORGIVEN', mods: { mercy: true } },
+  ];
+
+  function lightById(id) {
+    for (const l of LIGHTS) if (l.id === id) return l;
+    return null;
+  }
+
   function rnd() { return Math.random(); }
 
   function throwDice(hand, rng) {
@@ -26,16 +69,27 @@
   /* Analyse one throw.
      Returns { special, specialFace, flash, flashDice, flashPoints,
                optional:[{die,face,points}], wimpout } */
-  function analyse(result, forbidden) {
+  function analyse(result, forbidden, m) {
     const ids = Object.keys(result);
     forbidden = forbidden || [];
+    m = m || BASE_MODS;
 
     // Freight Train: five dice all showing the same numeric face.
     // Ruling A: the Sun *face* cannot complete one; a natural 10 on the Sun Cube can.
     if (ids.length === 5) {
       const faces = ids.map(d => result[d]);
-      const f0 = faces[0];
-      if (f0 !== SUN && faces.every(f => f === f0)) {
+      let f0 = faces[0];
+      let train = f0 !== SUN && faces.every(f => f === f0);
+      if (!train && m.sunTrain) {
+        // four of a kind plus the wild Sun completes the set
+        const nat = faces.filter(f => f !== SUN);
+        const suns = faces.length - nat.length;
+        if (suns === 1 && nat.length === 4 && nat.every(f => f === nat[0])) {
+          f0 = nat[0];
+          train = true;
+        }
+      }
+      if (train) {
         const special = f0 === 6 ? 'instant_win' : f0 === 10 ? 'supernova' : 'freight';
         return {
           special, specialFace: f0,
@@ -50,9 +104,10 @@
        be thrown again "until you can keep 'em or Wimp out", so they are reported
        as `forced` and the caller re-throws them. */
     const legal = {}, forced = [];
+    const sunIsSafe = !(m.sunMatches && forbidden.length);
     for (const d of ids) {
       const f = result[d];
-      if (f === SUN || forbidden.indexOf(f) === -1) legal[d] = f;
+      if (f === SUN ? sunIsSafe : forbidden.indexOf(f) === -1) legal[d] = f;
       else forced.push(d);
     }
 
@@ -76,20 +131,49 @@
     }
     if (flash !== null) flashPoints = 10 * flash;
 
+    /* Full House: a flash with a pair still on the table pays double. */
+    if (flash !== null && m.fullHouse) {
+      const rest = {};
+      for (const d in legal) {
+        if (flashDice.indexOf(d) !== -1 || legal[d] === SUN) continue;
+        rest[legal[d]] = (rest[legal[d]] || 0) + 1;
+      }
+      if (Object.keys(rest).some(f => rest[f] >= 2)) flashPoints *= 2;
+    }
+
+    /* Cosmic Sampler: five different faces. Scored like a flash -- mandatory and
+       consuming all five cubes, so it sweeps -- but it sets no forbidden face,
+       and so carries no Futtless obligation. */
+    let sampler = false;
+    if (flash === null && m.sampler && ids.length === 5) {
+      const seen = {};
+      let distinct = true;
+      for (const d of ids) {
+        const f = result[d];
+        if (seen[f]) { distinct = false; break; }
+        seen[f] = 1;
+      }
+      if (distinct) {
+        sampler = true;
+        flashDice = ids.slice();
+        flashPoints = m.sampler;
+      }
+    }
+
     // Optional tier (ruling G): loose 5s, 10s and the Sun.
     const optional = [];
     for (const d in legal) {
       if (flashDice.indexOf(d) !== -1) continue;
       const f = legal[d];
       if (f === SUN) optional.push({ die: d, face: SUN, points: 10 });
-      else if (SINGLES[f]) optional.push({ die: d, face: f, points: SINGLES[f] });
+      else if (m.singles[f]) optional.push({ die: d, face: f, points: m.singles[f] });
     }
     optional.sort((a, b) => b.points - a.points);
 
     return {
       special: null, specialFace: null,
-      flash, flashDice, flashPoints, optional, forced,
-      wimpout: flash === null && optional.length === 0,
+      flash, flashDice, flashPoints, optional, forced, sampler,
+      wimpout: flash === null && !sampler && optional.length === 0,
     };
   }
 
@@ -106,8 +190,15 @@
     for (const name of roster) {
       players.push({ name, banked: 0, onBoard: false, out: false, human: false });
     }
+    // opts.light: true for a random one, an id for a specific one, else none
+    let light = null;
+    if (opts.light === true) light = LIGHTS[Math.floor(Math.random() * LIGHTS.length)];
+    else if (typeof opts.light === 'string') light = lightById(opts.light);
+
     return {
       goal: opts.goal || 300,
+      light: light ? { id: light.id, name: light.name, blurb: light.blurb } : null,
+      mods: Object.assign({}, BASE_MODS, light ? light.mods : null),
       players,
       current: 0,
       phase: 'READY',        // READY | SELECT | TURN_OVER | GAME_OVER
@@ -130,6 +221,7 @@
       swept: false,
       mustRoll: true,        // first throw of a turn is always required
       throws: 0,
+      lastThrown: null,
     };
   }
 
@@ -141,7 +233,7 @@
     if (t.throws === 0 || t.points === 0) return false;
     if (t.forbidden.length) return false;                    // Futtless
     if (t.swept) return false;                               // Y.M.N.W.T.B.Y.M.
-    if (!player(s).onBoard && t.points < 35) return false;   // opening roll
+    if (!player(s).onBoard && t.points < mods(s).openAt) return false;  // opening roll
     return true;
   }
 
@@ -149,7 +241,9 @@
     const t = s.turn;
     if (t.forbidden.length) return 'FUTTLESS: CLEAR THE FLASH';
     if (t.swept) return 'ALL FIVE SCORED - YOU MUST';
-    if (!player(s).onBoard && t.points < 35) return 'NEED 35 TO GET ON THE BOARD';
+    const open = mods(s).openAt;
+    if (!player(s).onBoard && t.points < open)
+      return 'NEED ' + open + ' TO GET ON THE BOARD';
     return '';
   }
 
@@ -157,6 +251,7 @@
   function roll(s, rng) {
     const t = s.turn;
     t.result = throwDice(t.hand, rng);
+    t.lastThrown = t.hand.slice();       // Clean Sweep re-throws this whole set
     t.throws++;
     t.swept = false;
     return resolveThrow(s);
@@ -166,14 +261,17 @@
      the table. Ruling C -- only the dice that matched a flash face. */
   function rerollForced(s, rng) {
     const t = s.turn;
-    const again = throwDice(t.analysis.forced, rng);
+    // Clean Sweep: the offender takes the rest of the batch down with it
+    const back = mods(s).strictReroll && t.lastThrown
+      ? t.lastThrown.slice() : t.analysis.forced;
+    const again = throwDice(back, rng);
     for (const d in again) t.result[d] = again[d];
     return resolveThrow(s);
   }
 
   function resolveThrow(s) {
     const t = s.turn;
-    t.analysis = analyse(t.result, t.forbidden);
+    t.analysis = analyse(t.result, t.forbidden, mods(s));
     t.kept = {};
     const a = t.analysis;
 
@@ -201,6 +299,22 @@
         s.message = 'REROLL CLAUSE - NO ' + t.forbidden.join('/');
         return s;
       }
+      /* Mercy forgives the first wimpout of the game, but only where the points
+         could legally have been banked -- otherwise it would quietly smuggle a
+         player onto the board below the opening threshold. */
+      const p = player(s);
+      const m = mods(s);
+      if (m.mercy && !p.usedMercy && t.points > 0 &&
+          (p.onBoard || t.points >= m.openAt)) {
+        p.usedMercy = true;
+        p.banked += t.points;
+        p.onBoard = true;
+        s.event = 'mercy';
+        s.message = 'MERCY! YOUR ' + t.points + ' SURVIVES';
+        s.phase = 'TURN_OVER';
+        return s;
+      }
+
       const train = Object.keys(t.result).length === 5;
       t.points = 0;
       s.event = 'wimpout';
@@ -238,6 +352,7 @@
     const a = s.turn.analysis;
     if (a.special) return true;
     if (a.flash !== null) return true;                       // flash alone scores
+    if (a.sampler) return true;                              // so does a sampler
     return Object.keys(s.turn.kept).length > 0;              // min. one die
   }
 
@@ -348,6 +463,7 @@
     throwDice, analyse,
     newGame, freshTurn, player,
     canBank, canConfirm, whyMustRoll, selectionPoints,
+    LIGHTS, lightById, BASE_MODS,
     roll, rerollForced, toggleKeep, confirm, bank, nextTurn,
   };
 })(window);

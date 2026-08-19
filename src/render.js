@@ -123,10 +123,13 @@
       if (tag) scr.textCenter(tag, cx, 23, p.out ? 2 : 1);
     });
 
-    // Four chips already crowd the top strip, so the goal only takes a line of
-    // its own when it turns urgent. Otherwise it lives in the status row.
+    /* Four chips already crowd the top strip, so this line is reserved for
+       whatever is currently governing the game: Last Licks outranks a Guiding
+       Light, since it is the more urgent of the two. */
     if (s.lastLicks) {
       scr.textCenter('LAST LICKS ' + s.lastLicks.target, L.cx, 30, 2);
+    } else if (s.light) {
+      scr.textCenter('* ' + s.light.name + ' *', L.cx, 30, 2);
     }
   }
 

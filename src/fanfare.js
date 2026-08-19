@@ -11,15 +11,16 @@
     freight: { dur: 2600, top: 'FREIGHT TRAIN', sub: 'FIVE OF A KIND' },
     instant_win: { dur: 3200, top: 'FIVE STARS', sub: 'THE GAME IS YOURS' },
     supernova: { dur: 3200, top: 'SUPERNOVA', sub: 'TOO MANY POINTS. YOU ARE OUT' },
+    light: { dur: 3600, top: 'THE GUIDING LIGHT', sub: '' },
   };
 
   const S = {
     active: null,
 
-    fire(kind, note) {
+    fire(kind, note, sub) {
       const k = KINDS[kind];
       if (!k) return;
-      S.active = { kind, note: note || '', start: 0, dur: k.dur };
+      S.active = { kind, note: note || '', sub: sub || k.sub, start: 0, dur: k.dur };
     },
 
     clear() { S.active = null; },
@@ -39,7 +40,10 @@
         if ((y + Math.floor(p * 40)) % 2 === 0) scr.rect(0, y, scr.w, 1, 0);
       }
 
-      if (a.kind === 'supernova') {
+      if (a.kind === 'light') {
+        // a slow corona, rather than the violence of a train or a nova
+        scr.flamingSun(cx, cy, 40 + p * 10, 78 + p * 14, 20, t * 3, 2);
+      } else if (a.kind === 'supernova') {
         // collapsing rings: the star falling in on itself
         for (let i = 0; i < 5; i++) {
           const r = Math.round((1 - p) * (150 - i * 22) + i * 4);
@@ -63,16 +67,18 @@
          through the text otherwise, and the subtitle becomes unreadable at the
          exact moment it matters most. */
       // headline runs cy-24..cy-9, subtitle cy+22..cy+27, note cy+34..cy+44
-      const bandTop = cy - 30, bandH = a.note ? 82 : 64;
+      const bandTop = cy - 30, bandH = a.note ? 86 : 64;
       scr.rect(0, bandTop, scr.w, bandH, 0);
       scr.rect(0, bandTop, scr.w, 1, 1);
       scr.rect(0, bandTop + bandH - 1, scr.w, 1, 1);
 
       // headline holds steady while the effect moves behind it
       const flick = p > 0.75 && Math.sin(t * 0.03) < 0 ? 2 : 3;
+      /* Name before description: the headline is the branding, the note is what
+         actually happened, and the subtitle explains it. */
       scr.textCenter(k.top, cx, cy - 24, flick, 3);
-      scr.textCenter(k.sub, cx, cy + 22, 2);
-      if (a.note) scr.textCenter(a.note, cx, cy + 34, 3, 2);
+      if (a.note) scr.textCenter(a.note, cx, cy + 20, 3, 2);
+      if (a.sub) scr.textCenter(a.sub, cx, a.note ? cy + 38 : cy + 22, 2);
     },
   };
 

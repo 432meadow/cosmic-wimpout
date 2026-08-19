@@ -40,6 +40,29 @@ Near-identical yield, very different shape. There is a ceiling on how far any of
 them can diverge, and it belongs to the game rather than the code: 68% of all
 throws are *forced* by the rules, and 65% of all busts happen on one.
 
+## The Guiding Light
+
+The printed rules end with an invitation: *any new rule may be added at any time
+provided all players agree.* Switch it on before a game and one extra rule is
+drawn at random and announced at the start.
+
+| Rule | Effect |
+| --- | --- |
+| **COSMIC SAMPLER** | Five different faces score 25 |
+| **FULL HOUSE** | A flash with a pair alongside scores double |
+| **HALF MOONS RISE** | Half moons score 5 each |
+| **THE SUN RIDES** | The Sun may complete a Freight Train |
+| **THE SUN BETRAYS** | The Sun matches your flash face while clearing |
+| **CLEAN SWEEP** | Matching a flash face re-throws the whole batch |
+| **STEEP ASCENT** | You need 70 to get on the board |
+| **MERCY** | Your first wimpout each game is forgiven |
+
+Five of these are not inventions: they are the printed rules' genuine
+ambiguities (see [RULES.md](RULES.md) §5) read the other way, which is why they
+feel like the game rather than bolted onto it. Every variant lives as data in
+`BASE_MODS`, so the engine stays one code path instead of growing a branch per
+rule. Play to 300, 500 or 1000.
+
 ## It remembers
 
 The match is written to `localStorage` as you play and picked back up on a cold
@@ -90,6 +113,7 @@ and each is isolated in the engine so it can be flipped.
 | `src/save.js` | Match persistence across app close. |
 | `src/stats.js` | Lifetime records. |
 | `src/fanfare.js` | Full-screen moments for trains, wins and Supernovas. |
+| `src/audio.js` | Ambient drone and star sparkles under the menus. |
 | `src/game.js` | Shell: canvas, scaling, loop, input routing. |
 | `sim/` | Monte Carlo analysis and its PDF report. |
 | `tools/icon.html` | Generates the app icons from the in-game Sun-Star. |

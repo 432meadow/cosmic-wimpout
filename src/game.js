@@ -16,8 +16,10 @@
   const PAL_NAMES = Object.keys(CW.PALETTES);
   let palIndex = 0;
 
+  const ambient = new CW.Ambient(blips);
+
   // shared services for scenes
-  CW.app = { canvas, ctx, scr, blips };
+  CW.app = { canvas, ctx, scr, blips, ambient };
 
   // -------------------------------------------------------------------- scale
   /* Logical height is fixed; logical width follows the viewport aspect so the
@@ -117,6 +119,12 @@
 
   // --------------------------------------------------------------------- loop
   function frame(now) {
+    /* The bed plays under the menus and stops the moment a match begins. Both
+       calls are no-ops when already in that state, and start() bails out until
+       iOS has unlocked the context on first touch. */
+    if (CW.scenes.name === 'play' || !blips.on) ambient.stop();
+    else if (blips.ctx && blips.ctx.state === 'running') ambient.start();
+
     CW.scenes.tick(now);
     CW.scenes.draw(scr, now);
     requestAnimationFrame(frame);

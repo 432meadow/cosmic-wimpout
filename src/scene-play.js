@@ -47,6 +47,8 @@
     state = R.newGame(opts || { goal: 300 });
     resetView();
     persist();
+    // announce the extra rule up front; it governs the whole game
+    if (state.light) CW.fanfare.fire('light', state.light.name, state.light.blurb);
   }
 
   function persist() { CW.save.write(state, view); }
@@ -103,6 +105,7 @@
     else if (ev === 'wimpout') b.wimp();
     else if (ev === 'flash') b.flash();
     else if (ev === 'instant_win') b.win();
+    else if (ev === 'mercy') b.mercy();
     else if (ev === 'reroll') b.unpick();
     else b.score();
 

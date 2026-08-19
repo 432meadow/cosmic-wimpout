@@ -558,16 +558,28 @@
   Blips.prototype.pick = function () { this.play(880, 0.05); };
   Blips.prototype.unpick = function () { this.play(520, 0.05); };
   Blips.prototype.score = function () { this.play(660, 0.08); };
+  // a short rising figure, so a flash sounds like an event and not a click
+  Blips.prototype.seq = function (notes, step, dur, type, vol) {
+    notes.forEach((f, i) => setTimeout(
+      () => this.play(f, dur || 0.12, type, vol), i * (step || 70)));
+  };
+  Blips.prototype.chord = function (notes, dur, vol) {
+    for (const f of notes) this.play(f, dur || 0.3, 'triangle', vol || 0.03);
+  };
   Blips.prototype.flash = function () {
-    this.play(523, 0.08); setTimeout(() => this.play(784, 0.13), 80);
+    this.seq([523, 659, 784, 1046], 62, 0.14);
   };
   Blips.prototype.bank = function () {
-    this.play(440, 0.08); setTimeout(() => this.play(659, 0.1), 70);
-    setTimeout(() => this.play(880, 0.18), 150);
+    this.seq([440, 659, 880], 68, 0.16);
+    setTimeout(() => this.chord([440, 554, 659], 0.5), 150);
+  };
+  Blips.prototype.mercy = function () {
+    this.chord([392, 523, 659, 784], 0.9, 0.028);
+    this.seq([784, 1046], 140, 0.3, 'sine', 0.035);
   };
   Blips.prototype.wimp = function () {
-    this.play(220, 0.18, 'sawtooth');
-    setTimeout(() => this.play(130, 0.32, 'sawtooth'), 120);
+    this.seq([233, 185, 147], 95, 0.2, 'sawtooth', 0.045);
+    setTimeout(() => this.play(110, 0.42, 'sawtooth', 0.05), 290);
   };
   Blips.prototype.nova = function () {
     for (let i = 0; i < 8; i++)
