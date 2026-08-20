@@ -539,19 +539,41 @@
   };
 
   // ------------------------------------------------------------------ audio
-  function Blips() { this.ctx = null; this.on = true; }
+  function Blips() { this.ctx = null; this.on = true; this.unlocked = false; }
+
+  /* iOS needs more than resume(). Safari only really opens the output once a
+     source has actually been STARTED inside a user gesture, so a one-sample
+     silent buffer is fired until the context reports running. Without it the
+     context can sit in 'suspended' or claim to be running while producing
+     nothing at all. */
   Blips.prototype.ensure = function () {
     if (!this.ctx) {
       const AC = global.AudioContext || global.webkitAudioContext;
-      if (AC) this.ctx = new AC();
+      if (AC) { try { this.ctx = new AC(); } catch (e) { return null; } }
     }
-    if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
-    return this.ctx;
+    const ac = this.ctx;
+    if (!ac) return null;
+    if (ac.state === 'suspended') { try { ac.resume(); } catch (e) { /* ignore */ } }
+    if (!this.unlocked) {
+      try {
+        const src = ac.createBufferSource();
+        src.buffer = ac.createBuffer(1, 1, ac.sampleRate);
+        src.connect(ac.destination);
+        src.start(0);
+        if (ac.state === 'running') this.unlocked = true;
+      } catch (e) { /* nothing to do but try again on the next gesture */ }
+    }
+    return ac;
+  };
+
+  // has the browser actually opened the output? (the ringer switch is separate)
+  Blips.prototype.ready = function () {
+    return !!(this.ctx && this.ctx.state === 'running');
   };
   Blips.prototype.play = function (freq, dur, type, vol) {
     if (!this.on) return;
     const ac = this.ensure();
-    if (!ac) return;
+    if (!ac || ac.state !== 'running') return;   // never queue into a closed output
     const o = ac.createOscillator(), g = ac.createGain();
     o.type = type || 'square';
     o.frequency.setValueAtTime(freq, ac.currentTime);

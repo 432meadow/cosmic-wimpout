@@ -35,6 +35,16 @@
 
     btns.add('HINTS ' + (CW.hints.enabled ? 'ON' : 'OFF'), 8, SECONDARY_Y, 62,
              'hints', { quiet: true, scale: 1, h: SECONDARY_H });
+
+    /* Mute was keyboard-only, so on a phone there was no way to reach it at all.
+       The label also doubles as a diagnostic: WAIT means the browser has not
+       opened the audio output yet, while ON means it has -- so if it says ON and
+       you still hear nothing, the ringer switch is the culprit, not the game. */
+    const b = CW.app.blips;
+    const sound = !b.on ? 'SOUND OFF' : (b.ready() ? 'SOUND ON' : 'SOUND WAIT');
+    btns.add(sound, cx - 38, SECONDARY_Y, 76, 'sound',
+             { quiet: true, scale: 1, h: SECONDARY_H });
+
     if (CW.stats.any()) {
       btns.add('RECORDS', scr.w - 70, SECONDARY_Y, 62, 'stats',
                { quiet: true, scale: 1, h: SECONDARY_H });
@@ -71,6 +81,10 @@
       else if (a === 'rules') CW.scenes.go('rules');
       else if (a === 'stats') CW.scenes.go('stats');
       else if (a === 'hints') CW.hints.setEnabled(!CW.hints.enabled);
+      else if (a === 'sound') {
+        CW.app.blips.on = !CW.app.blips.on;
+        if (CW.app.blips.on) CW.app.blips.ensure();   // this tap is the gesture
+      }
       return true;
     },
 

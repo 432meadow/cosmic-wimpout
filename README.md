@@ -31,6 +31,12 @@ Touch: tap a cube to keep it, tap the buttons to roll, take and bank.
 Keyboard: `SPACE` roll / take · `B` bank · `1`–`5` pick a cube · `P` palette ·
 `M` mute.
 
+**No sound on iPhone?** Check the ringer switch first. Safari plays Web Audio
+through the ringer channel, so the hardware mute switch silences the game and no
+web page can override that. The menu's SOUND button reports what the browser
+itself is doing: `SOUND ON` means the audio output is open, so if you still hear
+nothing it is the switch.
+
 ## Opponents
 
 Pick one to three. They differ in temperament rather than skill, and the numbers
