@@ -127,7 +127,7 @@ and each is isolated in the engine so it can be flipped.
 | `src/audio.js` | Ambient drone and star sparkles under the menus. |
 | `src/game.js` | Shell: canvas, scaling, loop, input routing. |
 | `sim/` | Monte Carlo analysis. Generates the PDF report; not checked in. |
-| `tools/icon.html` | Generates the app icons from the in-game Sun-Star. |
+| `tools/make-icons.py` | Writes the app icons from the in-game Sun-Star. |
 
 The separation between `engine.js` and `render.js` is load-bearing: it is what
 made the move to a phone layout a re-layout rather than a rewrite, and it is what
@@ -166,6 +166,18 @@ Integer-only scaling was the original approach and had to go: `floor(393/384)` i
 **1**, so a phone would have rendered the game postage-stamp sized in a corner.
 
 ## Development
+
+Icons are generated, not hand-drawn:
+
+```bash
+python3 tools/make-icons.py
+```
+
+It reads the Sun-Star sprite and the palette straight out of `src/art.js`, so the
+icon cannot drift from the game, and writes the PNGs directly. An earlier version
+screenshotted a page in headless Chrome and produced silently broken output --
+Chrome clamps to a minimum window size, so the 180 and 192 icons were cropped
+corners of the artwork rather than the icon.
 
 **Bump `?v=N` in `index.html` and `CACHE` in `sw.js` together on every ship.**
 The service worker is cache-first, so without it an installed phone will keep
