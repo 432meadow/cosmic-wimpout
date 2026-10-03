@@ -73,15 +73,16 @@
       view.low = lh - CW.H;
       view.btn = null;
     } else {
-      /* Upright: the table right under the chips, its controls right under
-         the table -- bigger buttons, MENU tucked beneath -- and the whole
-         group sitting a little above the middle of what is left. */
-      const tableH = Math.round(lw * 0.9), blockH = tableH + 104;
+      /* Upright: the table right under the chips, the message under the
+         table, then -- with room to breathe -- the big buttons, and MENU
+         below those. The whole group sits a little above the middle of what
+         is left. */
+      const tableH = Math.round(lw * 0.9), blockH = tableH + 154;
       const top = 32 + Math.max(0, Math.round((lh - 32 - blockH) * 0.42));
       view.band = [top, top + tableH];
       view.low = top + tableH - 158;                     // status and message 10 below
-      view.btn = { y: CW.render.BTN_Y, w: 100, h: 34, single: 168,
-                   menu: { x: lw / 2 - 26, y: CW.render.BTN_Y + 46 } };
+      view.btn = { y: CW.render.BTN_Y + 46, w: 100, h: 34, single: 168,
+                   menu: { x: lw / 2 - 26, y: CW.render.BTN_Y + 96 } };
     }
     view.fan = Math.round((view.band[0] + view.band[1]) / 2 - 98);
     if (CW.app.renderer) CW.app.renderer.setSize(lw, lh);
