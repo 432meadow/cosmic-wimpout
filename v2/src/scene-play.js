@@ -320,9 +320,10 @@
     },
 
     /* 1.0's furniture, spread over the full-window canvas: the chips stay on
-       the top edge, the status line, message, buttons and hints move down to
-       the bottom edge, and the game-over panel and fanfare sit in the middle.
-       The table fills what is left. */
+       the top edge; the status line, message, buttons and hints move down --
+       to the bottom edge in landscape, to just under the table when the phone
+       is upright -- and the game-over panel and fanfare sit over the table.
+       Where everything goes is worked out by the shell (game.js). */
     draw(scr, t) {
       const Rn = CW.render, v = app().view, ctx = scr.ctx;
       ctx.clearRect(0, 0, scr.w, scr.h);
@@ -334,12 +335,12 @@
       ctx.translate(0, v.low);
       Rn.drawStatus(scr, state);
       Rn.drawMessage(scr, state, view, t);
-      Rn.layoutButtons(state, view.busy);
+      Rn.layoutButtons(state, view.busy, v.btn);
       Rn.drawButtons(scr);
       CW.hints.draw(scr, t);
       ctx.restore();
       ctx.save();
-      ctx.translate(0, v.mid);
+      ctx.translate(0, v.fan);
       if (state.phase === 'GAME_OVER') Rn.drawGameOver(scr, state);
       CW.fanfare.draw(scr, t);
       ctx.restore();

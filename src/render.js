@@ -182,34 +182,41 @@
     }
   }
 
-  function layoutButtons(s, rolling) {
+  /* geo is optional and only the 3D edition passes it: { y, w, h, single,
+     menu: {x, y} } to place the row elsewhere, e.g. under the table on a tall
+     phone. Without it, this is 1.0's row exactly. */
+  function layoutButtons(s, rolling, geo) {
     btns.clear();
-    const R = CW.rules, W = 88, GAP = 12;
+    const R = CW.rules, g = geo || {};
+    const W = g.w || 88, GAP = 12, Y = g.y == null ? BTN_Y : g.y;
+    const ONE = g.single || W;                       // a button alone in the row
+    const size = o => Object.assign(g.h ? { h: g.h } : {}, o || {});
+    const menu = g.menu || { x: 8, y: Y };
 
     /* Quiet, always-available way out. The match stays alive when we leave, so
        the menu can offer RESUME and this is never destructive. */
-    btns.add('MENU', 8, BTN_Y, 52, 'menu', { quiet: true, scale: 1 });
+    btns.add('MENU', menu.x, menu.y, 52, 'menu', { quiet: true, scale: 1 });
 
     // CONTINUE appearing mid-throw announces a wimpout before the cubes land
     if (rolling) return;
 
     if (s.phase === 'GAME_OVER') {
-      btns.add('NEW GAME', L.cx - W / 2, BTN_Y, W, 'new');
+      btns.add('NEW GAME', L.cx - ONE / 2, Y, ONE, 'new', size());
       return;
     }
     if (!s.players[s.current].human) return;          // opponents play themselves
     if (s.phase === 'READY') {
       if (R.canBank(s)) {
-        btns.add('ROLL', L.cx - W - GAP / 2, BTN_Y, W, 'roll');
-        btns.add('BANK ' + s.turn.points, L.cx + GAP / 2, BTN_Y, W, 'bank');
+        btns.add('ROLL', L.cx - W - GAP / 2, Y, W, 'roll', size());
+        btns.add('BANK ' + s.turn.points, L.cx + GAP / 2, Y, W, 'bank', size());
       } else {
-        btns.add('ROLL', L.cx - W / 2, BTN_Y, W, 'roll');
+        btns.add('ROLL', L.cx - ONE / 2, Y, ONE, 'roll', size());
       }
     } else if (s.phase === 'SELECT') {
-      btns.add('TAKE', L.cx - W / 2, BTN_Y, W, 'confirm',
-               { enabled: R.canConfirm(s) });
+      btns.add('TAKE', L.cx - ONE / 2, Y, ONE, 'confirm',
+               size({ enabled: R.canConfirm(s) }));
     } else if (s.phase === 'TURN_OVER') {
-      btns.add('CONTINUE', L.cx - W / 2, BTN_Y, W, 'next');
+      btns.add('CONTINUE', L.cx - ONE / 2, Y, ONE, 'next', size());
     }
   }
 

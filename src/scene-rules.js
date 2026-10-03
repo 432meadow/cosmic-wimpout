@@ -85,35 +85,51 @@
   const scene = {
     enter() { page = 0; if (!stars) stars = new CW.Stars(90, 21); },
 
+    /* 1.0 is always landscape and gets its layout exactly. A canvas taller
+       than it is wide (the 3D edition on an upright phone) gets a tall panel
+       and a button row it can fit. */
     draw(scr, t) {
       const cx = scr.w / 2;
       const p = PAGES[page];
+      const tall = scr.h > scr.w;
+      const pw = Math.min(scr.w - (tall ? 16 : 40), 380), px = cx - pw / 2;
+      const chars = Math.floor((pw - 20) / 4), step = tall ? 9 : 8;
+      /* Tall: the panel fits the longest page, so it does not jump about as
+         you page, and title, panel and buttons sit centred as one block. */
+      let panelH = 122, oy = 0;
+      if (tall) {
+        const most = PAGES.reduce((m, q) => Math.max(m, CW.ui.wrap(q.body, chars).length), 0);
+        panelH = Math.min(scr.h - 100, most * step + 16);
+        oy = Math.max(0, Math.round((scr.h - (42 + panelH + 14 + 26)) / 2));
+      }
+      const by = tall ? oy + 42 + panelH + 14 : 182;   // the button row
 
       scr.clear(0);
       stars.draw(scr, t);
-      scr.flamingSun(cx, 104, 46, 92, 20, t, 1);
+      scr.flamingSun(cx, tall ? oy + 42 + panelH / 2 : 104, 46, 92, 20, t, 1);
 
-      scr.textCenter(p.title, cx, 14, 3, 2);
-      scr.textCenter((page + 1) + ' / ' + PAGES.length, cx, 32, 1);
+      scr.textCenter(p.title, cx, oy + 14, 3, 2);
+      scr.textCenter((page + 1) + ' / ' + PAGES.length, cx, oy + 32, tall ? 2 : 1);
 
       // panel keeps the body legible over the corona
-      const pw = Math.min(scr.w - 40, 380), px = cx - pw / 2;
-      scr.roundRect(px, 42, pw, 122, [4, 2, 1], 0);
-      scr.roundFrame(px, 42, pw, 122, [4, 2, 1], 1);
+      scr.roundRect(px, oy + 42, pw, panelH, [4, 2, 1], 0);
+      scr.roundFrame(px, oy + 42, pw, panelH, [4, 2, 1], 1);
 
-      const lines = CW.ui.wrap(p.body, Math.floor((pw - 20) / 4));
-      let y = 50;
+      const lines = CW.ui.wrap(p.body, chars);
+      let y = oy + 50;
       for (const line of lines) {
-        if (y > 156) break;
+        if (y > oy + 42 + panelH - 8) break;
         scr.text(line, px + 10, y, line === line.toUpperCase() && line ? 3 : 2);
-        y += 8;
+        y += step;
       }
 
       btns.clear();
-      btns.add('BACK', 8, 182, 60, 'menu', { quiet: true, scale: 1 });
-      if (page > 0) btns.add('PREV', cx - 96, 182, 88, 'prev');
-      if (page < PAGES.length - 1) btns.add('NEXT', cx + 8, 182, 88, 'next');
-      else btns.add('PLAY', cx + 8, 182, 88, 'play');
+      btns.add('BACK', 8, by, 60, 'menu', { quiet: true, scale: 1 });
+      const bw = tall ? Math.min(80, (scr.w - 84) / 2) : 88;
+      const left = tall ? 76 : cx - 96, right = tall ? scr.w - 8 - bw : cx + 8;
+      if (page > 0) btns.add('PREV', left, by, bw, 'prev');
+      if (page < PAGES.length - 1) btns.add('NEXT', right, by, bw, 'next');
+      else btns.add('PLAY', right, by, bw, 'play');
       btns.draw(scr);
     },
 

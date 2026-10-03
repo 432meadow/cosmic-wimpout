@@ -38,15 +38,18 @@
       scr.textCenter('RECORDS', cx, 12, 3, 2);
 
       const list = rows();
-      // two columns, so twelve rows fit a 216-tall screen without scrolling
-      const half = Math.ceil(list.length / 2);
-      const colW = Math.min(190, (scr.w - 40) / 2);
-      const x0 = cx - colW - 6;
+      /* two columns, so twelve rows fit a 216-tall screen without scrolling;
+         on a canvas taller than it is wide, one column down the middle */
+      const tall = scr.h > scr.w;
+      const half = tall ? list.length : Math.ceil(list.length / 2);
+      const colW = tall ? Math.min(190, scr.w - 40) : Math.min(190, (scr.w - 40) / 2);
+      const x0 = tall ? cx - colW / 2 : cx - colW - 6;
+      const by = tall ? scr.h - 40 : 182;
 
       list.forEach((r, i) => {
         if (!r) return;
         const col = i < half ? 0 : 1;
-        const y = 34 + (i - col * half) * 11;
+        const y = 34 + (i - col * half) * (tall ? 14 : 11);
         const x = x0 + col * (colW + 12);
         scr.text(r[0], x, y, 2);
         const v = String(r[1]);
@@ -54,19 +57,19 @@
       });
 
       if (!CW.stats.any()) {
-        scr.textCenter('NOTHING RECORDED YET. GO ROLL SOMETHING', cx, 150, 1);
+        scr.textCenter('NOTHING RECORDED YET. GO ROLL SOMETHING', cx, tall ? 34 + 14 * 13 : 150, 1);
       }
 
       btns.clear();
-      btns.add('BACK', 8, 182, 60, 'menu', { quiet: true, scale: 1 });
+      btns.add('BACK', 8, by, 60, 'menu', { quiet: true, scale: 1 });
       // both resets live together, away from anything you might hit by accident
       if (CW.hints.seenCount() > 0) {
-        btns.add('RESET HINTS', scr.w - 174, 182, 76, 'forget',
-                 { quiet: true, scale: 1 });
+        if (tall) btns.add('RESET HINTS', scr.w - 94, by - 32, 86, 'forget', { quiet: true, scale: 1 });
+        else btns.add('RESET HINTS', scr.w - 174, 182, 76, 'forget', { quiet: true, scale: 1 });
       }
       if (CW.stats.any()) {
         btns.add(confirming ? 'SURE? TAP AGAIN' : 'CLEAR RECORDS',
-                 scr.w - 94, 182, 86, 'reset', { quiet: true, scale: 1 });
+                 scr.w - 94, by, 86, 'reset', { quiet: true, scale: 1 });
       }
       btns.draw(scr);
     },

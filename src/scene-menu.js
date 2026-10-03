@@ -14,11 +14,29 @@
   const BAND_TOP = 78, BAND_BOTTOM = 178;   // room the stack may occupy
   const SECONDARY_Y = 182, SECONDARY_H = 22;
 
+  /* 1.0 is always landscape and gets exactly the layout above. A canvas that
+     is taller than it is wide -- the 3D edition on a phone held upright --
+     spreads the same furniture down the screen, with bigger buttons. */
+  function geometry(scr) {
+    if (scr.h <= scr.w) {
+      return { title: TITLE_Y, sub: SUB_Y, top: BAND_TOP, bottom: BAND_BOTTOM,
+               second: SECONDARY_Y, btnH: CW.ui.BTN_H, gap: 8, btnW: 132, sun: 104 };
+    }
+    // title, subtitle and the stack as one block, centred above the small row
+    const second = scr.h - 40, btnH = 36, gap = 14;
+    const n = CW.play && CW.play.hasGame() ? 3 : 2;
+    const stackH = n * btnH + (n - 1) * gap, block = 60 + 34 + stackH;
+    const title = Math.max(10, Math.round((second - 12 - block) / 2));
+    const top = title + 94;
+    return { title, sub: title + 50, top, bottom: top + stackH, second, btnH, gap,
+             btnW: Math.min(176, scr.w - 40), sun: Math.round(top + stackH / 2) };
+  }
+
   const btns = new CW.ui.Buttons();
   let stars = null;
 
   function build(scr) {
-    const cx = scr.w / 2;
+    const cx = scr.w / 2, g = geometry(scr);
     const items = [];
     // A match survives leaving for the menu, so offer to pick it back up.
     if (CW.play && CW.play.hasGame()) {
@@ -29,11 +47,12 @@
     }
     items.push({ label: 'HOW TO PLAY', action: 'rules' });
 
-    const total = items.length * CW.ui.BTN_H + (items.length - 1) * 8;
-    const top = Math.round((BAND_TOP + BAND_BOTTOM) / 2 - total / 2);
-    btns.clear().stack(cx, top, 132, items, 8);
+    for (const it of items) it.h = g.btnH;
+    const total = items.length * g.btnH + (items.length - 1) * g.gap;
+    const top = Math.round((g.top + g.bottom) / 2 - total / 2);
+    btns.clear().stack(cx, top, g.btnW, items, g.gap);
 
-    btns.add('HINTS ' + (CW.hints.enabled ? 'ON' : 'OFF'), 8, SECONDARY_Y, 62,
+    btns.add('HINTS ' + (CW.hints.enabled ? 'ON' : 'OFF'), 8, g.second, 62,
              'hints', { quiet: true, scale: 1, h: SECONDARY_H });
 
     /* Mute was keyboard-only, so on a phone there was no way to reach it at all.
@@ -42,11 +61,11 @@
        you still hear nothing, the ringer switch is the culprit, not the game. */
     const b = CW.app.blips;
     const sound = !b.on ? 'SOUND OFF' : (b.ready() ? 'SOUND ON' : 'SOUND WAIT');
-    btns.add(sound, cx - 38, SECONDARY_Y, 76, 'sound',
+    btns.add(sound, cx - 38, g.second, 76, 'sound',
              { quiet: true, scale: 1, h: SECONDARY_H });
 
     if (CW.stats.any()) {
-      btns.add('RECORDS', scr.w - 70, SECONDARY_Y, 62, 'stats',
+      btns.add('RECORDS', scr.w - 70, g.second, 62, 'stats',
                { quiet: true, scale: 1, h: SECONDARY_H });
     }
   }
@@ -57,14 +76,15 @@
     draw(scr, t) {
       scr.clear(0);
       stars.draw(scr, t);
+      const g = geometry(scr);
       // the emblem, dimmed so the title and buttons sit clearly on top
-      scr.flamingSun(scr.w / 2, 104, 42, 86, 20, t, 1);
-      scr.shootingStar(scr.w / 2 + 12, 106, 1, 1);
+      scr.flamingSun(scr.w / 2, g.sun, 42, 86, 20, t, 1);
+      scr.shootingStar(scr.w / 2 + 12, g.sun + 2, 1, 1);
 
       const cx = scr.w / 2;
-      scr.textCenter('COSMIC', cx, TITLE_Y, 3, 4);
-      scr.textCenter('WIMPOUT', cx, TITLE_Y + 24, 3, 4);
-      scr.textCenter("MORE THAN AN EXPERIENCE ...IT'S A GAME!", cx, SUB_Y, 2);
+      scr.textCenter('COSMIC', cx, g.title, 3, 4);
+      scr.textCenter('WIMPOUT', cx, g.title + 24, 3, 4);
+      scr.textCenter("MORE THAN AN EXPERIENCE ...IT'S A GAME!", cx, g.sub, 2);
 
       build(scr);
       btns.draw(scr);

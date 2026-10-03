@@ -36,17 +36,27 @@
   const table = new CW.Table(world);
   const cam = new CW.Camera();
 
-  /* view: the logical size, and where a 216-row layout sits in it -- `mid`
-     centres one, `low` is how far 1.0's bottom furniture moves down. */
-  const view = { w: CW.W_MIN, h: CW.H, mid: 0, low: 0 };
+  /* view: the logical size and where things go in it.
+       mid    centres a 216-row layout (1.0's scenes, in landscape)
+       low    how far the play furniture -- status, message, buttons, hints --
+              moves down from where 1.0 draws it
+       fan    the same for the middle: the game-over panel and the fanfare
+       band   the rows the table is fitted between
+       btn    where the buttons go, when not 1.0's row (see render.js) */
+  const view = { w: CW.W_MIN, h: CW.H, mid: 0, low: 0, fan: 0, band: [31, 163], btn: null, portrait: false };
   CW.app = { canvas, ctx, scr, blips, ambient, world, table, cam, view, renderer: null };
 
   // -------------------------------------------------------------------- scale
   const isTouch = matchMedia('(hover: none)').matches;
+  /* Upright, 1.0's 384-wide layouts would leave a phone with pixels about a
+     point across. Instead the canvas is 240 wide -- pixels about as big as
+     1.0's on a phone held sideways -- and the scenes lay themselves out tall. */
+  const PORTRAIT_W = 240;
 
   function resize() {
     const iw = global.innerWidth, ih = global.innerHeight;
-    let s = Math.min(iw / CW.W_MIN, ih / CW.H);
+    const portrait = ih > iw;
+    let s = portrait ? iw / PORTRAIT_W : Math.min(iw / CW.W_MIN, ih / CW.H);
     if (!isTouch) s = Math.max(1, Math.floor(s));        // whole pixels on desktop
     else s = Math.max(0.5, s);
     const lw = Math.ceil(iw / s), lh = Math.ceil(ih / s);
@@ -55,12 +65,28 @@
       ctx.imageSmoothingEnabled = false;
       scr.setSize(lw, lh);
     }
-    view.w = lw; view.h = lh;
+    view.w = lw; view.h = lh; view.portrait = portrait;
     view.mid = Math.floor((lh - CW.H) / 2);
-    view.low = lh - CW.H;
+    if (!portrait) {
+      // 1.0's layout, stretched: chips on top, furniture on the bottom edge
+      view.band = [31, lh - 53];
+      view.low = lh - CW.H;
+      view.btn = null;
+    } else {
+      /* Upright: the table right under the chips, its controls right under
+         the table -- bigger buttons, MENU tucked beneath -- and the whole
+         group sitting a little above the middle of what is left. */
+      const tableH = Math.round(lw * 0.9), blockH = tableH + 104;
+      const top = 32 + Math.max(0, Math.round((lh - 32 - blockH) * 0.42));
+      view.band = [top, top + tableH];
+      view.low = top + tableH - 158;                     // status and message 10 below
+      view.btn = { y: CW.render.BTN_Y, w: 100, h: 34, single: 168,
+                   menu: { x: lw / 2 - 26, y: CW.render.BTN_Y + 46 } };
+    }
+    view.fan = Math.round((view.band[0] + view.band[1]) / 2 - 98);
     if (CW.app.renderer) CW.app.renderer.setSize(lw, lh);
     else { gl.width = lw; gl.height = lh; }
-    cam.fit(lw, lh);
+    cam.fit(lw, lh, view.band);
     for (const c of [canvas, gl]) {
       c.style.width = (lw * s) + 'px';
       c.style.height = (lh * s) + 'px';
@@ -71,9 +97,11 @@
   global.addEventListener('orientationchange', () => setTimeout(resize, 200));
   if (global.visualViewport) global.visualViewport.addEventListener('resize', resize);
 
-  // 1.0's scenes think in 216 rows: lift a point into their space
+  /* 1.0's scenes think in 216 rows. In landscape they are drawn centred in
+     the taller canvas; upright they get the whole of it and lay out tall. */
   const inPlay = () => CW.scenes.name === 'play';
-  const scenePoint = (x, y) => (inPlay() ? [x, y] : [x, y - view.mid]);
+  const centred = () => !inPlay() && !view.portrait;
+  const scenePoint = (x, y) => (centred() ? [x, y - view.mid] : [x, y]);
 
   // -------------------------------------------------------------------- input
   function toLogical(e) {
@@ -182,7 +210,7 @@
     gl.style.visibility = inPlay() ? 'visible' : 'hidden';
     cam.update(dt);
     CW.scenes.tick(now);
-    if (inPlay()) {
+    if (!centred()) {
       CW.scenes.draw(scr, now);
     } else {
       // a 216-row scene, centred in the full-window canvas

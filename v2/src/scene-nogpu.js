@@ -33,15 +33,17 @@
 
     draw(scr, t) {
       const w = WHY[reason] || WHY.error, cx = scr.w / 2;
+      const oy = Math.max(0, Math.round((scr.h - 216) / 2));   // centred if tall
       scr.clear(0);
       stars.draw(scr, t);
-      scr.flamingSun(cx, 56, 20, 38, 16, t, 1);
-      scr.textCenter('COSMIC WIMPOUT 2.0', cx, 14, 2);
-      scr.textCenter(w[0], cx, 50, 3, 2);
+      scr.flamingSun(cx, oy + 56, 20, 38, 16, t, 1);
+      scr.textCenter('COSMIC WIMPOUT 2.0', cx, oy + 14, 2);
+      scr.textCenter(w[0], cx, oy + 50, 3, 2);
       const lines = CW.ui.wrap(w[1], Math.floor((scr.w - 48) / 4));
-      lines.forEach((l, i) => scr.textCenter(l, cx, 100 + i * 9, 2));
-      btns.clear().add('PLAY 1.0', cx - 104, 170, 96, 'classic')
-        .add('RELOAD', cx + 8, 170, 96, 'reload', { quiet: true });
+      lines.forEach((l, i) => scr.textCenter(l, cx, oy + 100 + i * 9, 2));
+      const bw = Math.min(96, (scr.w - 40) / 2);
+      btns.clear().add('PLAY 1.0', cx - bw - 8, oy + 170, bw, 'classic')
+        .add('RELOAD', cx + 8, oy + 170, bw, 'reload', { quiet: true });
       btns.draw(scr);
     },
 

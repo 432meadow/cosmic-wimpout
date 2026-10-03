@@ -12,8 +12,7 @@
   'use strict';
   const CW = global.CW;
 
-  // 1.0's vertical budget: chips end at 30, the message line is 53 from the bottom
-  const BAND_TOP = 31, BAND_BOTTOM_GAP = 53, SIDE = 6;
+  const SIDE = 6;
   const PITCH_MIN = 0.34, PITCH_MAX = 1.45, ZOOM_MIN = 0.42, ZOOM_MAX = 1.9;
 
   class Camera {
@@ -92,11 +91,14 @@
     clothScale() { return this.ppu; }
 
     /* Fit to a logical screen of w x h, at the default angle: the distance at
-       which the tray just fills the band, and the shift that centres it. */
-    fit(w, h) {
-      if (w === this.w && h === this.h) return;
+       which the tray just fills the band of rows [top, bottom] the layout
+       leaves it, and the shift that centres it there. */
+    fit(w, h, band) {
+      const key = w + 'x' + h + ':' + band.join(',');
+      if (key === this.fitted) return;
+      this.fitted = key;
       this.w = w; this.h = h;
-      const top = BAND_TOP, bottom = h - BAND_BOTTOM_GAP;
+      const top = band[0], bottom = band[1];
       this.shift = 0;
       let lo = 4, hi = 120;
       for (let it = 0; it < 32; it++) {

@@ -53,7 +53,10 @@ It fills the window: 1.0's scale (whole pixels on desktop, as large as fits
 on touch), but rather than letterbox, the pixel canvas grows to cover the
 screen. 1.0's menus sit centred in it; in play its chips run along the top
 edge, its message and buttons along the bottom, and the table fills the
-rest. Drag the table to spin it round or tip it, pinch or scroll to zoom; a
+rest. Held upright, a phone gets a 240-wide canvas -- pixels about as big as
+1.0's held sideways -- and every screen lays itself out tall: stacked menu
+buttons and opponent cards, and in play the table right under the scores
+with large buttons directly beneath it. Drag the table to spin it round or tip it, pinch or scroll to zoom; a
 tap still keeps a cube and the buttons still answer at once, as in 1.0.
 
 It is 1.0 in everything but the table. The menu, opponent setup, rules,
