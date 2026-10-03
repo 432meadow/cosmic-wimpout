@@ -13,7 +13,8 @@
   'use strict';
   const CW = global.CW || (global.CW = {});
 
-  const KEY = 'cw.save.v1';
+  // a page may claim its own slot (2.0 does), so two editions never collide
+  const KEY = CW.saveKey || 'cw.save.v1';
   const VERSION = 1;
 
   // Enough of a shape check that a half-written or stale record is discarded

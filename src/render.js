@@ -274,9 +274,15 @@
     if (s.phase === 'GAME_OVER') drawGameOver(scr, s);
   }
 
+  /* The HUD pieces are exported as well as the whole board, so the 3D edition
+     (v2/) draws the same chips, status line, message, buttons and game-over
+     panel over its own table instead of keeping a copy of them. */
   CW.render = {
     draw, dieRects, slotFor, layout, L, CY,
     buttons: btns.list,
     buttonAt: (x, y) => btns.hit(x, y),
+    drawHud, drawStatus, drawMessage, drawGameOver, layoutButtons, MARKERS,
+    drawButtons: scr => btns.draw(scr),
+    MSG_Y, BTN_Y,
   };
 })(window);
