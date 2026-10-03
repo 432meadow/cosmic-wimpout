@@ -76,12 +76,13 @@
       view.drop = 0;
       view.btn = null;
     } else {
-      /* Upright: the table right under the chips, the message under the
-         table, then -- with room to breathe -- the big buttons, and MENU
-         below those. The whole group sits a little above the middle of what
-         is left. */
+      /* Upright: the table in the middle of the screen, then -- with room to
+         breathe -- the message, the big buttons, and MENU below those. On a
+         short phone the table rises just as far as the controls need to fit
+         under it, and never into the chips. */
       const tableH = Math.round(lw * 0.9), blockH = tableH + 154;
-      const top = 32 + Math.max(0, Math.round((lh - 32 - blockH) * 0.42));
+      const middle = Math.round((lh - tableH) / 2), lowest = lh - blockH - 6;
+      const top = Math.max(32, Math.min(middle, lowest));
       view.band = [top, top + tableH];
       view.low = top + tableH - 158;
       view.drop = 34;                    // status and message 44 below the table, 12 above ROLL
