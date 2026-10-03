@@ -40,10 +40,12 @@
        mid    centres a 216-row layout (1.0's scenes, in landscape)
        low    how far the play furniture -- status, message, buttons, hints --
               moves down from where 1.0 draws it
+       drop   how much further the words -- status, message, hints -- go,
+              to sit just above the buttons
        fan    the same for the middle: the game-over panel and the fanfare
        band   the rows the table is fitted between
        btn    where the buttons go, when not 1.0's row (see render.js) */
-  const view = { w: CW.W_MIN, h: CW.H, mid: 0, low: 0, fan: 0, band: [31, 163], btn: null, portrait: false };
+  const view = { w: CW.W_MIN, h: CW.H, mid: 0, low: 0, drop: 0, fan: 0, band: [31, 163], btn: null, portrait: false };
   CW.app = { canvas, ctx, scr, blips, ambient, world, table, cam, view, renderer: null };
 
   // -------------------------------------------------------------------- scale
@@ -71,6 +73,7 @@
       // 1.0's layout, stretched: chips on top, furniture on the bottom edge
       view.band = [31, lh - 53];
       view.low = lh - CW.H;
+      view.drop = 0;
       view.btn = null;
     } else {
       /* Upright: the table right under the chips, the message under the
@@ -80,7 +83,8 @@
       const tableH = Math.round(lw * 0.9), blockH = tableH + 154;
       const top = 32 + Math.max(0, Math.round((lh - 32 - blockH) * 0.42));
       view.band = [top, top + tableH];
-      view.low = top + tableH - 158;                     // status and message 10 below
+      view.low = top + tableH - 158;
+      view.drop = 34;                    // status and message 44 below the table, 12 above ROLL
       view.btn = { y: CW.render.BTN_Y + 46, w: 100, h: 34, single: 168,
                    menu: { x: lw / 2 - 26, y: CW.render.BTN_Y + 96 } };
     }

@@ -333,10 +333,12 @@
       Rn.drawHud(scr, state);
       ctx.save();
       ctx.translate(0, v.low);
-      Rn.drawStatus(scr, state);
-      Rn.drawMessage(scr, state, view, t);
       Rn.layoutButtons(state, view.busy, v.btn);
       Rn.drawButtons(scr);
+      // the words sit just above the buttons (further down when upright)
+      ctx.translate(0, v.drop);
+      Rn.drawStatus(scr, state);
+      Rn.drawMessage(scr, state, view, t);
       CW.hints.draw(scr, t);
       ctx.restore();
       ctx.save();
