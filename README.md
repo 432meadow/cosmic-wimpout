@@ -37,6 +37,61 @@ web page can override that. The menu's SOUND button reports what the browser
 itself is doing: `SOUND ON` means the audio output is open, so if you still hear
 nothing it is the switch.
 
+## Cosmic Wimpout 2.0 — the 3D table
+
+![Cubes on the 3D table, in 1.0's palette, one held for keeping](docs/v2-screenshot.png)
+
+**Try it: [432meadow.github.io/cosmic-wimpout-2/v2/](https://432meadow.github.io/cosmic-wimpout-2/v2/)**
+— a separate site for testing and sharing 2.0 while it is in progress; the
+1.0 link above is unaffected.
+
+`v2/` is the same game with the cubes thrown for real: stiff cubes simulated
+on a table and rendered with raw WebGPU (WGSL, no engine) — and drawn in
+1.0's look. Open `v2/index.html` over http(s) or localhost.
+
+It fills the window: 1.0's scale (whole pixels on desktop, as large as fits
+on touch), but rather than letterbox, the pixel canvas grows to cover the
+screen. 1.0's menus sit centred in it; in play its chips run along the top
+edge, its message and buttons along the bottom, and the table fills the
+rest. Drag the table to spin it round or tip it, pinch or scroll to zoom; a
+tap still keeps a cube and the buttons still answer at once, as in 1.0.
+
+It is 1.0 in everything but the table. The menu, opponent setup, rules,
+records, buttons, 3×5 font, hints, fanfare, Blips and the ambient bed are
+1.0's own files, loaded unchanged; so are the rules, the opponents and the
+save format (2.0 keeps its match in its own slot). The only new scene is
+play, and even its chips, status line, message, buttons and game-over panel
+are 1.0's, exported from `src/render.js`.
+
+The table is rendered at 1.0's logical resolution — 216 rows, width from the
+screen — and reduced to the live four-colour palette, so a cube is the same
+few dozen pixels as on 1.0's board and `P` recolours the table with
+everything else. The cubes carry 1.0's 24×24 face sprites texel for texel,
+light commons with void symbols and the black Sun Cube with a lit edge;
+held and flash cubes get 1.0's solid and dotted rings, and cubes that cannot
+score dim as 1.0 dims them. The cloth is 1.0's board — the Sun-Star corona,
+the elliptical spiral score track, the turn score in the sun's heart —
+painted with 1.0's primitives at the size it appears on screen, on a large
+round tray.
+
+A throw is physical: the cubes are tossed from your side of the table,
+whichever way you have turned it; they bounce and tumble, and when
+everything has come to rest each top face is read and fed to the engine as
+its dice draws. A cube left leaning on another is nudged, twice at most,
+before it is read. Tap a lit cube to keep it, as in 1.0; the keys are 1.0's.
+Without WebGPU, a card in 1.0's type says why and offers 1.0 itself.
+
+| Path | Role |
+| --- | --- |
+| `v2/src/softbody.js` | The cubes: an XPBD lattice held stiff by whole-cube shape matching, landings answered with a rigid impact impulse, contacts, sleep. Pure; runs under Node. |
+| `v2/src/table.js` | The five cubes: throw, settle, read, nudge, set aside. |
+| `v2/src/scene-play.js` | 1.0's play scene on the 3D table. |
+| `v2/src/renderer.js`, `shaders.js` | WebGPU: skinning, shadow map, the scene in tone/object/depth, then palette, dither, cube edges and rings. |
+| `v2/src/sprites.js` | 1.0's face sprites as an atlas; 1.0's board painted as the cloth. |
+| `v2/src/camera.js`, `mesh.js` | The orbit camera, fitted to 1.0's layout; cube and tray geometry. |
+| `v2/src/game.js`, `scene-nogpu.js` | The full-window shell (1.0's, with a WebGPU canvas underneath, and the table's gestures) and the no-WebGPU card. |
+| `v2/test/check.js` | Headless physics checks (`node v2/test/check.js`). |
+
 ## Opponents
 
 Pick one to three. They differ in temperament rather than skill, and the numbers

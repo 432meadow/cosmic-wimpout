@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Cosmic Wimpout 2.0</title>
+
+<!-- installed-app behaviour on iOS -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Wimpout 2">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#1a0f2e">
+<link rel="apple-touch-icon" href="../icons/icon-180.png">
+<link rel="icon" href="../icons/icon-192.png">
+
+<style>
+  html, body {
+    margin: 0; padding: 0; height: 100%; width: 100%;
+    background: #1a0f2e;                 /* palette void, so insets blend */
+    overflow: hidden;
+    overscroll-behavior: none;
+    font-family: ui-monospace, monospace;
+    -webkit-user-select: none; user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+  }
+  /* the whole window: the table under 1.0's pixel buffer, on one grid */
+  #stage { position: fixed; left: 0; top: 0; line-height: 0; }
+  #gl, #screen {
+    position: absolute; left: 0; top: 0;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    display: block;
+  }
+  #screen { touch-action: none; }        /* no pan/zoom stealing our gestures */
+</style>
+</head>
+<body>
+  <div id="stage">
+    <canvas id="gl" width="384" height="216"></canvas>
+    <canvas id="screen" width="384" height="216"></canvas>
+  </div>
+
+  <!-- 2.0 keeps its match in its own slot, so it never resumes a 1.0 game -->
+  <script>window.CW = { saveKey: 'cw2.save.v1' };</script>
+  <!-- ?v= must be bumped together with CACHE in sw.js on every ship (tools/bump.sh) -->
+  <!-- 1.0: rules, opponents, art, sound, widgets and every scene but play -->
+  <script src="../src/art.js?v=26"></script>
+  <script src="../src/audio.js?v=26"></script>
+  <script src="../src/engine.js?v=26"></script>
+  <script src="../src/ai.js?v=26"></script>
+  <script src="../src/ui.js?v=26"></script>
+  <script src="../src/scenes.js?v=26"></script>
+  <script src="../src/hints.js?v=26"></script>
+  <script src="../src/save.js?v=26"></script>
+  <script src="../src/stats.js?v=26"></script>
+  <script src="../src/fanfare.js?v=26"></script>
+  <script src="../src/render.js?v=26"></script>
+  <script src="../src/scene-setup.js?v=26"></script>
+  <script src="../src/scene-menu.js?v=26"></script>
+  <script src="../src/scene-rules.js?v=26"></script>
+  <script src="../src/scene-stats.js?v=26"></script>
+  <!-- 2.0: the table -->
+  <script src="src/math.js?v=26"></script>
+  <script src="src/softbody.js?v=26"></script>
+  <script src="src/mesh.js?v=26"></script>
+  <script src="src/sprites.js?v=26"></script>
+  <script src="src/shaders.js?v=26"></script>
+  <script src="src/renderer.js?v=26"></script>
+  <script src="src/camera.js?v=26"></script>
+  <script src="src/table.js?v=26"></script>
+  <script src="src/scene-play.js?v=26"></script>
+  <script src="src/scene-nogpu.js?v=26"></script>
+  <script src="src/game.js?v=26"></script>
+  <script>
+    if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+      addEventListener('load', () => navigator.serviceWorker.register('../sw.js'));
+    }
+  </script>
+</body>
+</html>
